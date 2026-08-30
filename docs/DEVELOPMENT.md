@@ -1,0 +1,3 @@
+# Development
+
+Node.js 22 and 24 are supported runtimes; Node 24.19.0 is the locally verified production target. The extension is emitted with an esbuild `node22` syntax target so the same artifact remains compatible with both supported majors—it does not prevent execution on Node 24. `npm run build` emits a complete bundle to ignored `bundles/hurricon-broadcast`; `npm run dev` starts the local NodeCG root; `npm test` runs unit tests; and `npm run typecheck` checks browser and extension targets separately. Source pages live under neutral `pages/` and `server/` paths so dependency-mode NodeCG does not mistake them for an installed bundle.

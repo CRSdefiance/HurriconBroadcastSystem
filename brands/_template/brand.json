@@ -1,0 +1,14 @@
+{
+  "$schema": "../../schemas/brand.json",
+  "id": "template",
+  "displayName": "My Event",
+  "shortName": "My Event",
+  "website": "example.org",
+  "socialHandle": "@MyEvent",
+  "assets": { "logoPrimary": "assets/logo-primary.svg", "logoMark": "assets/logo-mark.svg", "fallbackSponsor": "assets/logo-mark.svg" },
+  "colors": { "primary": "#2563eb", "secondary": "#06b6d4", "accent": "#f59e0b", "background": "#070b16", "panel": "#111827", "text": "#ffffff", "mutedText": "#b9c2d0", "player1": "#f43f5e", "player2": "#38bdf8", "success": "#22c55e", "warning": "#f59e0b" },
+  "typography": { "headingFamily": "Arial, Helvetica, sans-serif", "bodyFamily": "Arial, Helvetica, sans-serif", "numericFamily": "Consolas, monospace", "headingWeight": 800 },
+  "shape": { "cornerRadius": 16, "borderWidth": 2, "panelOpacity": 0.94 },
+  "animation": { "durationMs": 320, "reducedMotion": false }
+}
+

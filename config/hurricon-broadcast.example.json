@@ -1,0 +1,19 @@
+{
+  "obs": {
+    "url": "ws://127.0.0.1:4455",
+    "password": "REPLACE_WITH_YOUR_OBS_WEBSOCKET_PASSWORD",
+    "transition": { "name": "Fade", "durationMs": 500 },
+    "transitionMap": {
+      "technical": { "name": "Fade", "durationMs": 750 }
+    },
+    "sceneMap": {
+      "tournament": "HBS - Tournament",
+      "gameplay": "HBS - Gameplay Show",
+      "interview": "HBS - Interview",
+      "stage": "HBS - Stage",
+      "break": "HBS - Break",
+      "schedule": "HBS - Schedule",
+      "technical": "HBS - Technical"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+node_modules/
+.pnpm-store/
+bundles/
+.nodecg-runtime/
+_reference/
+Reference Images/
+.nodecg/
+db/
+logs/
+*.log
+config/hurricon-broadcast.json
+cfg/hurricon-broadcast.json
+test-results/
+playwright-report/

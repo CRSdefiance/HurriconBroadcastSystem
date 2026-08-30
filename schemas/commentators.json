@@ -1,0 +1,2 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"array","maxItems":4,"items":{"type":"object","required":["name"],"properties":{"name":{"type":"string","maxLength":120},"pronouns":{"type":"string","maxLength":40},"social":{"type":"string","maxLength":120}}}}
+

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["id", "displayName", "shortName", "assets", "colors", "typography", "shape", "animation"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "displayName": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "shortName": { "type": "string", "minLength": 1, "maxLength": 40 },
+    "website": { "type": "string", "maxLength": 120 },
+    "socialHandle": { "type": "string", "maxLength": 80 },
+    "assets": { "type": "object", "required": ["logoPrimary", "logoMark"], "properties": { "logoPrimary": {"type":"string"}, "logoMark": {"type":"string"}, "background": {"type":"string"}, "feedBackground": {"type":"string"}, "feed1Background": {"type":"string"}, "feed2Background": {"type":"string"}, "feed3Background": {"type":"string"}, "feed4Background": {"type":"string"}, "runnerBackground": {"type":"string"}, "fallbackSponsor": {"type":"string"} }, "additionalProperties": { "type": "string", "pattern": "^(?!.*(?:^|/)\\.\\.(?:/|$)).+\\.(?:png|jpe?g|webp|svg)$" } },
+    "colors": { "type": "object", "required": ["primary", "secondary", "accent", "background", "panel", "text", "mutedText", "player1", "player2", "success", "warning"], "properties": { "primary":{"$ref":"#/definitions/color"}, "secondary":{"$ref":"#/definitions/color"}, "accent":{"$ref":"#/definitions/color"}, "background":{"$ref":"#/definitions/color"}, "panel":{"$ref":"#/definitions/color"}, "text":{"$ref":"#/definitions/color"}, "mutedText":{"$ref":"#/definitions/color"}, "player1":{"$ref":"#/definitions/color"}, "player2":{"$ref":"#/definitions/color"}, "success":{"$ref":"#/definitions/color"}, "warning":{"$ref":"#/definitions/color"} }, "additionalProperties": false },
+    "typography": { "type": "object", "required": ["headingFamily", "bodyFamily", "numericFamily", "headingWeight"], "properties": { "headingFamily":{"type":"string"}, "bodyFamily":{"type":"string"}, "numericFamily":{"type":"string"}, "headingWeight":{"type":"integer","minimum":100,"maximum":900} } },
+    "shape": { "type": "object", "required": ["cornerRadius", "borderWidth", "panelOpacity"], "properties": { "cornerRadius":{"type":"number","minimum":0}, "borderWidth":{"type":"number","minimum":0}, "panelOpacity":{"type":"number","minimum":0,"maximum":1} } },
+    "animation": { "type": "object", "required": ["durationMs", "reducedMotion"], "properties": { "durationMs":{"type":"integer","minimum":0}, "reducedMotion":{"type":"boolean"} } }
+  },
+  "definitions": { "color": { "type":"string", "pattern":"^#[0-9a-fA-F]{6}$" } }
+}

@@ -1,0 +1,4 @@
+[
+  { "id": "doors", "title": "Doors Open", "startTime": "10:00 AM" },
+  { "id": "finals", "title": "Tournament Finals", "subtitle": "Main Stage", "startTime": "7:30 PM" }
+]

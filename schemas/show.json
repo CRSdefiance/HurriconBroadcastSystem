@@ -1,0 +1,2 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["mode"],"properties":{"mode":{"enum":["tournament","gameplay","interview","stage","break","schedule","technical"]},"currentSegment":{"type":"string","maxLength":160},"nextSegment":{"type":"string","maxLength":160},"nextSegmentTime":{"type":"string","maxLength":80}}}
+

@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "obs": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "string", "default": "ws://127.0.0.1:4455" },
+        "password": { "type": "string" },
+        "sceneMap": { "type": "object", "additionalProperties": { "type": "string" } },
+        "transition": { "$ref": "#/definitions/transition" },
+        "transitionMap": { "type": "object", "additionalProperties": { "$ref": "#/definitions/transition" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "transition": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "durationMs": { "type": "integer", "minimum": 50, "maximum": 20000 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

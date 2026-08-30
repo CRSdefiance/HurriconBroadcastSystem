@@ -1,0 +1,19 @@
+{
+  "$schema": "../../schemas/brand.json",
+  "id": "hurricon",
+  "displayName": "Hurricon",
+  "shortName": "Hurricon",
+  "website": "hurricon.org",
+  "socialHandle": "@HurriconWV",
+  "assets": {
+    "logoPrimary": "assets/logo-primary.svg",
+    "logoMark": "assets/logo-mark.svg",
+    "fallbackSponsor": "assets/logo-mark.svg",
+    "background": "backgrounds/hurricon-neon-grid.png",
+    "feedBackground": "backgrounds/hurricon-neon-grid.png"
+  },
+  "colors": { "primary": "#6d28d9", "secondary": "#0ea5e9", "accent": "#f72585", "background": "#080b14", "panel": "#151821", "text": "#ffffff", "mutedText": "#b6bdc9", "player1": "#ef4444", "player2": "#3b82f6", "success": "#22c55e", "warning": "#f59e0b" },
+  "typography": { "headingFamily": "Arial, Helvetica, sans-serif", "bodyFamily": "Arial, Helvetica, sans-serif", "numericFamily": "Consolas, monospace", "headingWeight": 800 },
+  "shape": { "cornerRadius": 12, "borderWidth": 2, "panelOpacity": 0.95 },
+  "animation": { "durationMs": 300, "reducedMotion": false }
+}

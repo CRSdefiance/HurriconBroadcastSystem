@@ -1,0 +1,5 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "required": ["game", "round", "player1", "player2", "status"],
+  "properties": { "game": {"type":"string"}, "round":{"type":"string"}, "bestOf":{"type":["integer","null"],"minimum":1}, "status":{"enum":["setup","ready","live","complete"]}, "player1":{"$ref":"player.json"}, "player2":{"$ref":"player.json"} }
+}
+

@@ -1,0 +1,30 @@
+{
+  "name": "hurricon-broadcast-system",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first NodeCG broadcast graphics and OBS control for Game Grove and Hurricon",
+  "engines": { "node": "22.x || 24.x" },
+  "scripts": {
+    "clean": "node scripts/build.mjs clean",
+    "build": "vite build && esbuild server/index.ts --bundle --platform=node --format=cjs --target=node22 --external:nodecg --outfile=bundles/hurricon-broadcast/extension/index.js && node scripts/build.mjs assets",
+    "dev": "npm run build && node scripts/start.mjs",
+    "start": "npm run build && node scripts/start.mjs",
+    "preview": "vite --host 127.0.0.1 --port 4173",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.extension.json",
+    "brand:new": "node scripts/create-brand.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1",
+    "nodecg": "2.8.0",
+    "obs-websocket-js": "5.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "esbuild": "0.25.5",
+    "typescript": "5.9.3",
+    "vite": "7.0.0",
+    "vitest": "3.2.4"
+  }
+}

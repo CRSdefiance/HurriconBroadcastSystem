@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["feedCount", "cameraVisible", "timerVisible", "guidesVisible", "game", "runner", "timer"],
+  "properties": {
+    "feedCount": { "type": "integer", "minimum": 1, "maximum": 4 },
+    "cameraVisible": { "type": "boolean" },
+    "timerVisible": { "type": "boolean" },
+    "guidesVisible": { "type": "boolean" },
+    "feedIdentitiesVisible": { "type": "boolean" },
+    "feedSocialsVisible": { "type": "boolean" },
+    "feedIdentities": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 140 },
+          "pronouns": { "type": "string", "maxLength": 80 },
+          "social": { "type": "string", "maxLength": 140 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "game": { "type": "string", "maxLength": 140 },
+    "platform": { "type": "string", "maxLength": 80 },
+    "category": { "type": "string", "maxLength": 100 },
+    "runner": { "type": "string", "maxLength": 140 },
+    "pronouns": { "type": "string", "maxLength": 80 },
+    "estimate": { "type": "string", "maxLength": 40 },
+    "timer": {
+      "type": "object",
+      "required": ["running", "elapsedMs"],
+      "properties": {
+        "running": { "type": "boolean" },
+        "elapsedMs": { "type": "number", "minimum": 0 },
+        "startedAt": { "type": "number" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

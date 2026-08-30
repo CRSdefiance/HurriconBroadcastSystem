@@ -1,0 +1,114 @@
+import './styles/graphics.css';
+import './styles/identity-transitions.css';
+import { applyBrand, assetUrl } from './brand';
+import { mockBrand, mockCommentators, mockLowerThird, mockMatch, mockShow, mockSpeedrun } from './mock';
+import { observe } from './replicant';
+import { speedrunFeedIdentities, timerElapsed } from './domain';
+import type { Brand, Commentator, FeedCount, LowerThirdState, MatchState, PlayerState, ShowState, SpeedrunState } from './types';
+
+const $ = <T extends HTMLElement>(selector: string): T | null => document.querySelector(selector);
+const text = (selector: string, value: unknown) => { const el = $(selector); if (el) el.textContent = value == null ? '' : String(value); };
+const layout = document.body.dataset.layout;
+const previewParams = new URLSearchParams(location.search);
+const compositePreview = previewParams.get('background') === '1' && layout !== 'background' && layout !== 'speedrun-backgrounds';
+document.body.classList.toggle('composite-preview', compositePreview);
+const fit = () => { const stage = $('.stage'); if (stage) (stage as HTMLElement).style.transform = `scale(${Math.min(innerWidth/1920, innerHeight/1080)})`; };
+addEventListener('resize', fit); fit();
+
+observe<Brand>('brand', mockBrand, (value) => {
+  applyBrand(value);
+  document.documentElement.classList.toggle('reduce-motion', value.animation.reducedMotion);
+  document.querySelectorAll<HTMLImageElement>('[data-logo]').forEach((img) => {
+    img.src = assetUrl(value, value.assets.logoPrimary);
+    img.onerror = () => { img.src = assetUrl(value, value.assets.logoMark); };
+  });
+  const sceneBackground = value.assets.background;
+  const feedBackground = value.assets.feedBackground ?? sceneBackground;
+  const slotBackground = (slot?: string) => {
+    const override = slot === 'runner' ? value.assets.runnerBackground : value.assets[`feed${slot}Background`];
+    return override ?? feedBackground;
+  };
+  document.querySelectorAll<HTMLElement>('[data-scene-background]').forEach((element) => {
+    element.style.backgroundImage = sceneBackground ? `url("${assetUrl(value, sceneBackground)}")` : '';
+  });
+  document.querySelectorAll<HTMLElement>('[data-feed-background]').forEach((element) => {
+    const selectedBackground = slotBackground(element.dataset.feedBackground);
+    element.style.backgroundImage = selectedBackground ? `url("${assetUrl(value, selectedBackground)}")` : '';
+  });
+  if (compositePreview) {
+    const sceneTarget = layout === 'break' || layout === 'technical' ? $('.stage > .background') : $('.stage');
+    if (sceneTarget) sceneTarget.style.backgroundImage = sceneBackground ? `url("${assetUrl(value, sceneBackground)}")` : '';
+    const feedTargets: Array<[string, string]> = [
+      ['.tournament .game-hole', '1'],
+      ['.show .main-feed', '1'],
+      ['.show .secondary', '2'],
+      ['.speedrun .feed-1', '1'],
+      ['.speedrun .feed-2', '2'],
+      ['.speedrun .feed-3', '3'],
+      ['.speedrun .feed-4', '4'],
+      ['.speedrun .camera-window', 'runner']
+    ];
+    for (const [selector, slot] of feedTargets) {
+      const selectedBackground = slotBackground(slot);
+      const viewport = $(selector);
+      if (viewport) viewport.style.backgroundImage = selectedBackground ? `url("${assetUrl(value, selectedBackground)}")` : '';
+    }
+  }
+});
+const renderPlayerIdentity = (side: 'p1'|'p2', player: PlayerState) => {
+  text(`[data-${side}-name]`, player.displayName);
+  text(`[data-${side}-pronouns]`, player.pronouns);
+  text(`[data-${side}-location]`, player.location);
+  text(`[data-${side}-social]`, player.social);
+  $(`.tournament .${side}`)?.classList.toggle('has-social', Boolean(player.social));
+};
+observe<MatchState>('match', mockMatch, (m) => { text('[data-game]',m.game);text('[data-round]',m.round);text('[data-status]',m.status);renderPlayerIdentity('p1',m.player1);renderPlayerIdentity('p2',m.player2);text('[data-p1-score]',m.player1.score);text('[data-p2-score]',m.player2.score);text('[data-best]',m.bestOf ? `BEST OF ${m.bestOf}` : ''); });
+observe<Commentator[]>('commentators', mockCommentators, (list) => text('[data-commentators]',list.length ? `Commentary: ${list.map((c)=>c.name).join(' · ')}` : ''));
+observe<ShowState>('show', mockShow, (s) => { text('[data-current]',s.currentSegment || (layout === 'break' ? 'Intermission' : 'Live show'));text('[data-next]',s.nextSegment || 'More programming soon');text('[data-next-time]',s.nextSegmentTime || ''); });
+observe<LowerThirdState>('lowerThird', mockLowerThird, (lower) => { const card = $('[data-lower-card]'); card?.classList.toggle('visible', lower.visible);text('[data-lower-title]',lower.title);text('[data-lower-subtitle]',lower.subtitle);text('[data-lower-tertiary]',lower.tertiary); });
+
+const requestedFeedCount = Number(previewParams.get('feeds'));
+const previewSpeedrun: SpeedrunState = !window.nodecg && [1, 2, 3, 4].includes(requestedFeedCount)
+  ? {
+      ...mockSpeedrun,
+      feedCount: requestedFeedCount as FeedCount,
+      cameraVisible: previewParams.get('camera') !== '0',
+      timerVisible: previewParams.get('timer') !== '0',
+      guidesVisible: previewParams.get('guides') !== '0'
+    }
+  : mockSpeedrun;
+
+let speedrunState = previewSpeedrun;
+const renderTimer = () => {
+  if (layout !== 'speedrun') return;
+  const elapsed = timerElapsed(speedrunState.timer);
+  const hours = Math.floor(elapsed / 3_600_000);
+  const minutes = Math.floor(elapsed / 60_000) % 60;
+  const seconds = Math.floor(elapsed / 1000) % 60;
+  const tenths = Math.floor(elapsed / 100) % 10;
+  text('[data-run-timer]', `${hours ? `${String(hours).padStart(2,'0')}:` : ''}${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${tenths}`);
+  text('[data-timer-status]', speedrunState.timer.running ? 'Timer · running' : 'Timer · paused');
+};
+observe<SpeedrunState>('speedrun', previewSpeedrun, (run) => {
+  speedrunState = run;
+  const identities = speedrunFeedIdentities(run);
+  const zone = $('[data-feed-zone]');
+  if (zone) zone.className = `feed-zone count-${run.feedCount}${run.cameraVisible ? ' has-camera' : ''}${run.guidesVisible ? ' guides' : ''}`;
+  for (let index=1; index<=4; index++) $(`.feed-${index}`)?.classList.toggle('hidden', index > run.feedCount);
+  $('[data-runner-rail]')?.classList.toggle('hidden', !run.cameraVisible);
+  $('[data-timer-card]')?.classList.toggle('hidden', !run.timerVisible);
+  identities.forEach((identity, index) => {
+    const position = index + 1;
+    const card = $(`[data-feed-identity-card="${position}"]`);
+    const identityVisible = (run.feedIdentitiesVisible ?? true) && position <= run.feedCount && Boolean(identity.name || identity.pronouns || identity.social);
+    card?.classList.toggle('hidden', !identityVisible);
+    card?.classList.toggle('has-social', Boolean((run.feedSocialsVisible ?? true) && identity.social));
+    text(`[data-feed-runner="${position}"]`, identity.name);
+    text(`[data-feed-pronouns="${position}"]`, identity.pronouns);
+    text(`[data-feed-social="${position}"]`, identity.social);
+  });
+  text('[data-run-game]', run.game); text('[data-run-platform]', run.platform); text('[data-runner]', run.runner); text('[data-runner-pronouns]', run.pronouns); text('[data-run-category]', run.category); text('[data-run-category-footer]', run.category); text('[data-run-estimate]', run.estimate); text('[data-feed-label]', `${run.feedCount} ${run.feedCount === 1 ? 'feed' : 'feeds'}`);
+  document.body.classList.toggle('guides-visible', run.guidesVisible);
+  renderTimer();
+});
+if (layout === 'speedrun') window.setInterval(renderTimer, 100);

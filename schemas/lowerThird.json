@@ -1,0 +1,2 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["visible","title","style"],"properties":{"visible":{"type":"boolean"},"title":{"type":"string","maxLength":140},"subtitle":{"type":"string","maxLength":140},"tertiary":{"type":"string","maxLength":140},"style":{"enum":["person","announcement","sponsor"]}}}
+
