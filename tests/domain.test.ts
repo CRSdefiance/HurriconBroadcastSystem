@@ -4,6 +4,7 @@ import { nextSponsor } from '../src/sponsors';
 import { parseSchedule } from '../src/schedule';
 import { fitRect } from '../src/viewport';
 import { advanceBroadcastRail, availableRailModules, defaultBroadcastRail, normalizeBroadcastRail } from '../src/rail';
+import { defaultTransitionOverlay, defaultTransitionSettings, normalizeTransitionOverlay, normalizeTransitionSettings, transitionHalfMs } from '../src/transition';
 
 describe('match operations',()=>{
   it('swaps all player data and scores',()=>{const match=defaultMatch();match.player1={displayName:'Alpha',social:'@a',score:2};match.player2={displayName:'Beta',social:'@b',score:1};const result=swapPlayers(match);expect(result.player1).toEqual({displayName:'Beta',social:'@b',score:1});expect(result.player2.displayName).toBe('Alpha');});
@@ -39,5 +40,21 @@ describe('broadcast rail',()=>{
     expect(advanceBroadcastRail(rail,1,123).activeModule).toBe('donation');
     expect(advanceBroadcastRail(rail,-1,123).activeModule).toBe('announcement');
     expect(advanceBroadcastRail({...rail,held:true},1).activeModule).toBe('donation');
+  });
+});
+describe('browser transitions',()=>{
+  it('uses deterministic safe defaults',()=>{
+    expect(defaultTransitionSettings()).toEqual({mode:'obs',obsName:'Fade',durationMs:700});
+    expect(defaultTransitionOverlay()).toEqual({requestId:0,phase:'idle',style:'corner',durationMs:700,startedAt:0});
+  });
+  it('clamps transition duration and rejects invalid settings',()=>{
+    const settings=normalizeTransitionSettings({mode:'iris',obsName:'  HBS Wipe  ',durationMs:99999});
+    expect(settings).toEqual({mode:'iris',obsName:'HBS Wipe',durationMs:4000});
+    expect(normalizeTransitionSettings({mode:'invalid' as never,durationMs:-1})).toEqual({mode:'obs',obsName:'Fade',durationMs:400});
+    expect(transitionHalfMs(settings)).toBe(2000);
+  });
+  it('normalizes overlay request and phase values',()=>{
+    expect(normalizeTransitionOverlay({requestId:3.9,phase:'covering',style:'iris',durationMs:1,startedAt:-5,error:'  failed  '})).toEqual({requestId:3,phase:'covering',style:'iris',durationMs:400,startedAt:0,error:'failed'});
+    expect(normalizeTransitionOverlay({phase:'unknown' as never,style:'obs' as never})).toEqual(defaultTransitionOverlay());
   });
 });

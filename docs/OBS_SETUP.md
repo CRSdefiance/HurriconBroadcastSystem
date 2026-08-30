@@ -18,6 +18,20 @@ Add **HBS - Global Rail** as a nested scene at the top of every program scene wh
 
 The rail rotates donation progress, approved latest-donation details, sponsors, announcements, and now/up-next programming. Rotation is server-owned, so every OBS/browser instance displays the same module. Logo fields accept an HTTPS URL or a bundle URL beginning with `/bundles/`; invalid paths fall back to a text-only sponsor card.
 
+## HBS transition overlay
+
+Create another reusable OBS scene named **HBS - Transition Overlay**. Add a 1920×1080 Browser Source using:
+
+- URL: `http://127.0.0.1:9090/bundles/hurricon-broadcast/graphics/transition-overlay.html`
+- Width: `1920`
+- Height: `1080`
+- **Shutdown source when not visible**: off
+- **Refresh browser when scene becomes active**: off
+
+Nest **HBS - Transition Overlay** at the very top of every HBS program scene. The same nested scene and Browser Source must be reused so it remains loaded while OBS changes scenes. In **HBS Setup / Preview → Transitions**, choose Corner Wipe, Diagonal Wipe, or Iris and set the total duration. HBS covers the program frame, performs an OBS Cut at the fully covered midpoint, and reveals the destination. The existing OBS Fade/Stinger mode remains available when the browser overlay is not desired.
+
+Preview each HBS transition from Setup before enabling it. If the overlay source is missing, HBS still attempts the scene change, but the hidden midpoint Cut will be visible to viewers.
+
 ## Speedrun / gameplay scene
 
 Create or select the scene mapped as `gameplay` (the example config calls it **HBS - Gameplay Show**). Add a Browser Source named **HBS - Speedrun Overlay** with:
@@ -54,7 +68,7 @@ Recommended canvas/output is 1920×1080 at 60 fps. Split console HDMI before cap
 
 ## Scene transitions
 
-HBS selects an OBS transition immediately before each dashboard scene change. The default is **Fade** at 500 ms. When OBS is connected, HBS Control lists the transitions in the active OBS scene collection; select one, enter a duration, and click **Apply transition**. Fixed-duration transitions ignore the duration field.
+In OBS transition mode, HBS selects an OBS transition immediately before each dashboard scene change. The default is **Fade**. When OBS is connected, **HBS Setup / Preview** lists transitions in the active OBS scene collection; select one, enter a duration, and click **Apply transition settings**. Fixed-duration transitions ignore the duration field.
 
 To create a GDQ-style branded transition, open OBS's **Scene Transitions** dock, click **+**, choose **Stinger**, select a short video with transparency, configure its transition point, and give it a clear name such as `HBS Stinger`. It then appears in the HBS dashboard selector. Keep **Shutdown source when not visible** disabled on HBS Browser Sources so the destination graphic is already loaded when a transition begins.
 

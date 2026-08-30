@@ -2,7 +2,8 @@ import { resolve } from 'node:path';
 import type NodeCG from 'nodecg/types';
 import { defaultMatch, defaultSpeedrun, speedrunFeedIdentities, timerAction } from '../src/domain';
 import { advanceBroadcastRail, defaultBroadcastRail, normalizeBroadcastRail } from '../src/rail';
-import type { Brand, BroadcastRailState, Commentator, LowerThirdState, MatchState, ObsState, RailModule, ShowMode, ShowState, SpeedrunState } from '../src/types';
+import { defaultTransitionOverlay, defaultTransitionSettings, normalizeTransitionSettings, transitionHalfMs } from '../src/transition';
+import type { Brand, BroadcastRailState, Commentator, LowerThirdState, MatchState, ObsState, RailModule, ShowMode, ShowState, SpeedrunState, TransitionOverlayState, TransitionSettings } from '../src/types';
 import { listBrandIds, loadBrand } from './branding';
 import { ObsConnectionManager, type ObsConfig } from './obs/ObsConnectionManager';
 
@@ -17,6 +18,8 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
   const show = nodecg.Replicant<ShowState>('show', { defaultValue: { mode: 'tournament', nextSegment: 'More programming soon' }, persistent: true });
   const speedrun = nodecg.Replicant<SpeedrunState>('speedrun', { defaultValue: defaultSpeedrun(), persistent: true });
   const broadcastRail = nodecg.Replicant<BroadcastRailState>('broadcastRail', { defaultValue: defaultBroadcastRail(), persistent: true });
+  const transitionSettings = nodecg.Replicant<TransitionSettings>('transitionSettings', { defaultValue: defaultTransitionSettings(), persistent: true });
+  const transitionOverlay = nodecg.Replicant<TransitionOverlayState>('transitionOverlay', { defaultValue: defaultTransitionOverlay(), persistent: false });
   if (!speedrun.value || ![1, 2, 3, 4].includes(speedrun.value.feedCount) || !speedrun.value.timer) {
     speedrun.value = defaultSpeedrun();
   }
@@ -28,6 +31,8 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
     feedIdentities: speedrunFeedIdentities(speedrun.value)
   };
   broadcastRail.value = normalizeBroadcastRail(broadcastRail.value);
+  transitionSettings.value = normalizeTransitionSettings(transitionSettings.value);
+  transitionOverlay.value = defaultTransitionOverlay();
   const activeBrand = nodecg.Replicant<string>('activeBrand', { defaultValue: 'game-grove', persistent: true });
   const brand = nodecg.Replicant<Brand>('brand', { defaultValue: loadBrand(brandsRoot, schemasRoot, 'game-grove').brand, persistent: false });
   const brandStatus = nodecg.Replicant<{ available: string[]; warnings: string[]; error?: string }>('brandStatus', { defaultValue: { available: listBrandIds(brandsRoot), warnings: [] }, persistent: false });
@@ -51,17 +56,43 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
   void controller.start();
   nodecg.listenFor('brand:set', (id) => { if (typeof id === 'string') applyBrand(id); });
   nodecg.listenFor('brand:reload', () => applyBrand(activeBrand.value));
+  const delay = (milliseconds: number) => new Promise<void>((resolveDelay) => setTimeout(resolveDelay, milliseconds));
+  let sceneRequestId = 0;
   nodecg.listenFor('show:setMode', async (mode) => {
     if (typeof mode !== 'string') return;
     show.value = { ...show.value, mode: mode as ShowMode };
-    try { await controller.switchScene(mode as ShowMode); }
-    catch (error) { obs.value = { ...obs.value, lastError: error instanceof Error ? error.message : String(error) }; }
+    const requestId = ++sceneRequestId;
+    const settings = normalizeTransitionSettings(transitionSettings.value);
+    if (settings.mode === 'obs') {
+      transitionOverlay.value = { ...defaultTransitionOverlay(), requestId, startedAt: Date.now() };
+      try { await controller.switchScene(mode as ShowMode); }
+      catch (error) { obs.value = { ...obs.value, lastError: error instanceof Error ? error.message : String(error) }; }
+      return;
+    }
+    const halfMs = transitionHalfMs(settings);
+    transitionOverlay.value = { requestId, phase: 'covering', style: settings.mode, durationMs: settings.durationMs, startedAt: Date.now() };
+    await delay(halfMs);
+    if (requestId !== sceneRequestId) return;
+    let transitionError: string | undefined;
+    try { await controller.cutToScene(mode as ShowMode); }
+    catch (error) { transitionError = error instanceof Error ? error.message : String(error); obs.value = { ...obs.value, lastError: transitionError }; }
+    transitionOverlay.value = { requestId, phase: 'revealing', style: settings.mode, durationMs: settings.durationMs, startedAt: Date.now(), error: transitionError };
+    await delay(halfMs);
+    if (requestId === sceneRequestId) transitionOverlay.value = { requestId, phase: transitionError ? 'error' : 'idle', style: settings.mode, durationMs: settings.durationMs, startedAt: Date.now(), error: transitionError };
   });
   nodecg.listenFor('obs:setTransition', async (data) => {
     if (!data || typeof data !== 'object') return;
     const value = data as { name?: string; durationMs?: number };
     if (typeof value.name !== 'string') return;
     try { await controller.setTransition({ name: value.name, durationMs: typeof value.durationMs === 'number' ? value.durationMs : undefined }); }
+    catch (error) { obs.value = { ...obs.value, lastError: error instanceof Error ? error.message : String(error) }; }
+  });
+  nodecg.listenFor('transition:set', async (data) => {
+    if (!data || typeof data !== 'object') return;
+    const settings = normalizeTransitionSettings(data as Partial<TransitionSettings>);
+    transitionSettings.value = settings;
+    if (settings.mode !== 'obs') return;
+    try { await controller.setTransition({ name: settings.obsName, durationMs: settings.durationMs }); }
     catch (error) { obs.value = { ...obs.value, lastError: error instanceof Error ? error.message : String(error) }; }
   });
   nodecg.listenFor('match:swap', () => { match.value = { ...match.value, player1: match.value.player2, player2: match.value.player1 }; });

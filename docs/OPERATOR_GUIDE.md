@@ -15,11 +15,13 @@
 
 ## During the show
 
+NodeCG now exposes two focused panels. **HBS Live Control** contains only frequent on-air actions: scene takes, scores, match status, the run timer, broadcast-rail transport, lower-third visibility, and program summaries. **HBS Setup / Preview** contains text entry, feed layouts, runner identities, donation/sponsor content, branding, transitions, and preview links. Prepare and proof content in Setup, then operate primarily from Live Control.
+
 Enter both players, game, round, and best-of value, then click **Apply match info**. Typing stays local until applied; score buttons remain immediate. **Swap players** moves all player metadata and scores. Reset scores has a confirmation. Set the match ready/live/complete as the bracket progresses.
 
 Large Show Control buttons update NodeCG state and ask OBS to switch the configured scene. When OBS is disconnected, state still updates and the red status/error explains what did not switch. Use **Technical difficulties** as the safe-break action; it never stops streaming.
 
-Choose the desired OBS transition and duration in Show Control before the program. **Fade** at 400–600 ms is a dependable default. A Stinger can provide a branded wipe when one has been created in OBS; its timing is configured in OBS and HBS ignores the duration field. Test every destination scene because transitions apply to whole OBS scene changes, not to manually hiding or showing sources inside one scene.
+Choose the desired transition in **Setup / Preview** before the program. **OBS Fade** is a dependable default. A Stinger can provide a video-based branded wipe when one has been created in OBS; its timing is configured in OBS. HBS also provides asset-free **Corner**, **Diagonal**, and **Iris** transitions through the Transition Overlay Browser Source. Test every destination scene before broadcast.
 
 Fill a lower third, choose its style, then Show/Hide it. Update **Now / up next** before going to break.
 

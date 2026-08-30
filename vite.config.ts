@@ -19,7 +19,9 @@ export default defineConfig({
         break: resolve(__dirname, 'pages/graphics/break.html'),
         technical: resolve(__dirname, 'pages/graphics/technical.html'),
         lowerThird: resolve(__dirname, 'pages/graphics/lower-third.html'),
-        broadcastRail: resolve(__dirname, 'pages/graphics/broadcast-rail.html')
+        broadcastRail: resolve(__dirname, 'pages/graphics/broadcast-rail.html'),
+        transitionOverlay: resolve(__dirname, 'pages/graphics/transition-overlay.html'),
+        setup: resolve(__dirname, 'pages/dashboard/setup.html')
       }
     }
   }

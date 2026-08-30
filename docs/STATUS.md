@@ -14,6 +14,8 @@
 - Reusable global broadcast rail with synchronized automatic/manual rotation, safe blank, donation progress, approved latest-donation details, sponsors, announcements, and now/up-next programming
 - Server-only authenticated OBS WebSocket v5 connection, scene switching, status, and exponential reconnect
 - Configurable Fade or custom Stinger scene transitions, per-destination overrides, dashboard selection, and Cut fallback
+- Separate compact Live Control and Setup / Preview panels
+- Asset-free synchronized Corner, Diagonal, and Iris browser transitions with a hidden midpoint OBS Cut
 - Mock preview data, brand creation/fetch scripts, unit tests, and operator documentation
 
 ## Next V1 modules

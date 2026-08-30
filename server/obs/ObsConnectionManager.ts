@@ -60,6 +60,24 @@ export class ObsConnectionManager {
     await this.client.call('SetCurrentProgramScene', { sceneName });
     this.log.info(`Switched OBS to ${sceneName} using ${appliedTransition}.`);
   }
+  async cutToScene(mode: ShowMode): Promise<void> {
+    const sceneName = this.config.sceneMap?.[mode];
+    if (!sceneName) throw new Error(`No OBS scene is configured for ${mode}.`);
+    const previous = await this.client.call('GetCurrentSceneTransition');
+    try {
+      await this.client.call('SetCurrentSceneTransition', { transitionName: 'Cut' });
+      await this.client.call('SetCurrentProgramScene', { sceneName });
+      this.log.info(`Switched OBS to ${sceneName} behind the HBS transition overlay.`);
+    } finally {
+      if (previous.transitionName !== 'Cut') {
+        try {
+          await this.client.call('SetCurrentSceneTransition', { transitionName: previous.transitionName });
+          const restored = await this.client.call('GetCurrentSceneTransition');
+          if (!restored.transitionFixed) await this.client.call('SetCurrentSceneTransitionDuration', { transitionDuration: previous.transitionDuration });
+        } catch (error) { this.log.warn(`Scene changed, but OBS transition restore failed: ${error instanceof Error ? error.message : String(error)}`); }
+      }
+    }
+  }
   async setTransition(transition: TransitionSpec): Promise<void> {
     if (!transition.name.trim()) throw new Error('Transition name is required.');
     if (transition.durationMs !== undefined && (transition.durationMs < 50 || transition.durationMs > 20000)) throw new Error('Transition duration must be between 50 and 20000 ms.');

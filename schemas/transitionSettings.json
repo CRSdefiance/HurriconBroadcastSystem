@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["mode", "obsName", "durationMs"],
+  "properties": {
+    "mode": { "enum": ["obs", "corner", "diagonal", "iris"] },
+    "obsName": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "durationMs": { "type": "integer", "minimum": 400, "maximum": 4000 }
+  },
+  "additionalProperties": false
+}

@@ -13,4 +13,8 @@ export interface RunTimerState { running: boolean; elapsedMs: number; startedAt?
 export interface FeedIdentity { name: string; pronouns?: string; social?: string }
 export interface SpeedrunState { feedCount: FeedCount; cameraVisible: boolean; timerVisible: boolean; guidesVisible: boolean; feedIdentitiesVisible?: boolean; feedSocialsVisible?: boolean; feedIdentities?: FeedIdentity[]; game: string; platform?: string; category?: string; runner: string; pronouns?: string; estimate?: string; timer: RunTimerState }
 export interface ObsState { connected: boolean; host?: string; currentProgramScene?: string; streaming?: boolean; recording?: boolean; currentTransition?: string; transitionDurationMs?: number; availableTransitions?: string[]; lastError?: string }
+export type HbsTransitionMode = 'obs' | 'corner' | 'diagonal' | 'iris';
+export interface TransitionSettings { mode: HbsTransitionMode; obsName: string; durationMs: number }
+export type TransitionPhase = 'idle' | 'covering' | 'revealing' | 'error';
+export interface TransitionOverlayState { requestId: number; phase: TransitionPhase; style: Exclude<HbsTransitionMode, 'obs'>; durationMs: number; startedAt: number; error?: string }
 export interface Brand { id: string; displayName: string; shortName: string; website?: string; socialHandle?: string; assets: Record<string, string>; colors: Record<string, string>; typography: { headingFamily: string; bodyFamily: string; numericFamily: string; headingWeight: number }; shape: { cornerRadius: number; borderWidth: number; panelOpacity: number }; animation: { durationMs: number; reducedMotion: boolean } }

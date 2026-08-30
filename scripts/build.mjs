@@ -21,7 +21,10 @@ writeFileSync(resolve(out, 'package.json'), JSON.stringify({
   main: 'extension/index.js',
   nodecg: {
     compatibleRange: '^2.8.0',
-    dashboardPanels: [{ name: 'control', title: 'HBS Control', width: 8, file: 'index.html', headerColor: '#172554' }],
+    dashboardPanels: [
+      { name: 'control', title: 'HBS Live Control', width: 5, file: 'index.html', headerColor: '#172554' },
+      { name: 'setup', title: 'HBS Setup / Preview', width: 7, file: 'setup.html', headerColor: '#312e81' }
+    ],
     graphics: [
       { file: 'tournament.html', width: 1920, height: 1080, singleInstance: false },
       { file: 'show.html', width: 1920, height: 1080, singleInstance: false },
@@ -31,7 +34,8 @@ writeFileSync(resolve(out, 'package.json'), JSON.stringify({
       { file: 'break.html', width: 1920, height: 1080, singleInstance: false },
       { file: 'technical.html', width: 1920, height: 1080, singleInstance: false },
       { file: 'lower-third.html', width: 1920, height: 1080, singleInstance: false },
-      { file: 'broadcast-rail.html', width: 1920, height: 1080, singleInstance: false }
+      { file: 'broadcast-rail.html', width: 1920, height: 1080, singleInstance: false },
+      { file: 'transition-overlay.html', width: 1920, height: 1080, singleInstance: false }
     ]
   }
 }, null, 2));

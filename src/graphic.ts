@@ -1,11 +1,12 @@
 import './styles/graphics.css';
 import './styles/identity-transitions.css';
 import { applyBrand, assetUrl } from './brand';
-import { mockBrand, mockBroadcastRail, mockCommentators, mockLowerThird, mockMatch, mockShow, mockSpeedrun } from './mock';
+import { mockBrand, mockBroadcastRail, mockCommentators, mockLowerThird, mockMatch, mockShow, mockSpeedrun, mockTransitionOverlay } from './mock';
 import { observe } from './replicant';
 import { speedrunFeedIdentities, timerElapsed } from './domain';
 import { normalizeBroadcastRail } from './rail';
-import type { Brand, BroadcastRailState, Commentator, FeedCount, LowerThirdState, MatchState, PlayerState, ShowState, SpeedrunState } from './types';
+import { normalizeTransitionOverlay } from './transition';
+import type { Brand, BroadcastRailState, Commentator, FeedCount, HbsTransitionMode, LowerThirdState, MatchState, PlayerState, ShowState, SpeedrunState, TransitionOverlayState } from './types';
 
 const $ = <T extends HTMLElement>(selector: string): T | null => document.querySelector(selector);
 const text = (selector: string, value: unknown) => { const el = $(selector); if (el) el.textContent = value == null ? '' : String(value); };
@@ -82,6 +83,15 @@ observe<BroadcastRailState>('broadcastRail', mockBroadcastRail, (raw) => {
   text('[data-rail-announcement]',rail.announcement);
   const rotation=$<HTMLElement>('[data-rail-rotation-progress]');if(rotation){rotation.classList.remove('running');rotation.style.animationDuration=`${rail.rotationSeconds}s`;void rotation.offsetWidth;if(rail.visible&&rail.automatic&&!rail.held)rotation.classList.add('running');}
 });
+const requestedTransitionStyle = previewParams.get('style');
+const previewTransitionStyle: Exclude<HbsTransitionMode,'obs'> = requestedTransitionStyle === 'diagonal' || requestedTransitionStyle === 'iris' ? requestedTransitionStyle : 'corner';
+const previewTransition = !window.nodecg && previewParams.get('preview') === '1' ? { ...mockTransitionOverlay, phase: 'covering' as const, style: previewTransitionStyle, startedAt: Date.now() } : mockTransitionOverlay;
+const transitionRep=observe<TransitionOverlayState>('transitionOverlay', previewTransition, (raw) => {
+  if (layout !== 'transition-overlay') return;
+  const transition=normalizeTransitionOverlay(raw);const root=$<HTMLElement>('[data-transition-overlay]');if(!root)return;
+  root.className='transition-overlay';void root.offsetWidth;root.classList.add(transition.style,transition.phase);root.style.setProperty('--transition-half-ms',`${transition.durationMs/2}ms`);root.style.setProperty('--transition-motion-ms',`${transition.durationMs*.38}ms`);root.setAttribute('aria-hidden',String(transition.phase==='idle'||transition.phase==='error'));
+});
+if(layout==='transition-overlay'&&!window.nodecg&&previewParams.get('preview')==='1')window.setInterval(()=>{const current=transitionRep.get();transitionRep.set({...current,requestId:current.requestId+1,phase:current.phase==='covering'?'revealing':'covering',startedAt:Date.now()});},previewTransition.durationMs/2);
 
 const requestedFeedCount = Number(previewParams.get('feeds'));
 const previewSpeedrun: SpeedrunState = !window.nodecg && [1, 2, 3, 4].includes(requestedFeedCount)
