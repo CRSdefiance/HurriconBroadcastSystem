@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["visible", "automatic", "held", "rotationSeconds", "activeModule", "enabledModules", "donation", "announcement", "sponsors", "sponsorIndex"],
+  "properties": {
+    "visible": { "type": "boolean" },
+    "automatic": { "type": "boolean" },
+    "held": { "type": "boolean" },
+    "rotationSeconds": { "type": "integer", "minimum": 3, "maximum": 300 },
+    "activeModule": { "enum": ["donation", "sponsor", "announcement", "programming"] },
+    "enabledModules": { "type": "object", "required": ["donation", "sponsor", "announcement", "programming"], "properties": { "donation": { "type": "boolean" }, "sponsor": { "type": "boolean" }, "announcement": { "type": "boolean" }, "programming": { "type": "boolean" } }, "additionalProperties": false },
+    "donation": { "$ref": "#/definitions/donation" },
+    "announcement": { "type": "string", "maxLength": 240 },
+    "sponsors": { "type": "array", "items": { "$ref": "#/definitions/sponsor" } },
+    "sponsorIndex": { "type": "integer", "minimum": 0 },
+    "updatedAt": { "type": "number" }
+  },
+  "definitions": {
+    "donation": { "type": "object", "required": ["total", "goal", "currency"], "properties": { "total": { "type": "number", "minimum": 0 }, "goal": { "type": "number", "minimum": 0 }, "currency": { "type": "string", "maxLength": 8 }, "latestDonor": { "type": "string", "maxLength": 120 }, "latestAmount": { "type": "number", "minimum": 0 }, "latestMessage": { "type": "string", "maxLength": 240 }, "updatedAt": { "type": "number" } }, "additionalProperties": false },
+    "sponsor": { "type": "object", "required": ["id", "name", "enabled"], "properties": { "id": { "type": "string", "maxLength": 80 }, "name": { "type": "string", "maxLength": 120 }, "logoUrl": { "type": "string", "maxLength": 500 }, "enabled": { "type": "boolean" } }, "additionalProperties": false }
+  },
+  "additionalProperties": false
+}

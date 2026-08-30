@@ -4,6 +4,20 @@ Use OBS Studio 28 or later, where obs-websocket is built in. In **Tools → WebS
 
 Create scenes matching the `sceneMap` names in the config. Add each HBS graphic as a 1920×1080 Browser Source using the URLs listed in HBS Control. Keep capture feeds below transparent HBS browser graphics. The dashed preview rectangles are transparent in OBS and are alignment guides only.
 
+## Global broadcast rail
+
+Create a reusable OBS scene named **HBS - Global Rail**. Add one 1920×1080 Browser Source using:
+
+- URL: `http://127.0.0.1:9090/bundles/hurricon-broadcast/graphics/broadcast-rail.html`
+- Width: `1920`
+- Height: `1080`
+- **Shutdown source when not visible**: off
+- **Refresh browser when scene becomes active**: off
+
+Add **HBS - Global Rail** as a nested scene at the top of every program scene where the rail should be available. Do not crop the Browser Source; the page is transparent except for the bottom rail. HBS layouts reserve the bottom safe zone so the rail does not cover gameplay, tournament metadata, or the speedrun timer. Use **Safe blank** in HBS Control when the rail should disappear without modifying OBS.
+
+The rail rotates donation progress, approved latest-donation details, sponsors, announcements, and now/up-next programming. Rotation is server-owned, so every OBS/browser instance displays the same module. Logo fields accept an HTTPS URL or a bundle URL beginning with `/bundles/`; invalid paths fall back to a text-only sponsor card.
+
 ## Speedrun / gameplay scene
 
 Create or select the scene mapped as `gameplay` (the example config calls it **HBS - Gameplay Show**). Add a Browser Source named **HBS - Speedrun Overlay** with:

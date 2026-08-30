@@ -4,6 +4,10 @@ export interface MatchState { game: string; gameSubtitle?: string; round: string
 export interface Commentator { name: string; pronouns?: string; social?: string }
 export interface LowerThirdState { visible: boolean; title: string; subtitle?: string; tertiary?: string; style?: 'person' | 'announcement' | 'sponsor' }
 export interface ShowState { mode: ShowMode; currentSegment?: string; nextSegment?: string; nextSegmentTime?: string }
+export type RailModule = 'donation' | 'sponsor' | 'announcement' | 'programming';
+export interface SponsorItem { id: string; name: string; logoUrl?: string; enabled: boolean }
+export interface DonationState { total: number; goal: number; currency: string; latestDonor?: string; latestAmount?: number; latestMessage?: string; updatedAt?: number }
+export interface BroadcastRailState { visible: boolean; automatic: boolean; held: boolean; rotationSeconds: number; activeModule: RailModule; enabledModules: Record<RailModule, boolean>; donation: DonationState; announcement: string; sponsors: SponsorItem[]; sponsorIndex: number; updatedAt: number }
 export type FeedCount = 1 | 2 | 3 | 4;
 export interface RunTimerState { running: boolean; elapsedMs: number; startedAt?: number }
 export interface FeedIdentity { name: string; pronouns?: string; social?: string }

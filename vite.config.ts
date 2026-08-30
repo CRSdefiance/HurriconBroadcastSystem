@@ -18,7 +18,8 @@ export default defineConfig({
         feedBackgrounds: resolve(__dirname, 'pages/graphics/feed-backgrounds.html'),
         break: resolve(__dirname, 'pages/graphics/break.html'),
         technical: resolve(__dirname, 'pages/graphics/technical.html'),
-        lowerThird: resolve(__dirname, 'pages/graphics/lower-third.html')
+        lowerThird: resolve(__dirname, 'pages/graphics/lower-third.html'),
+        broadcastRail: resolve(__dirname, 'pages/graphics/broadcast-rail.html')
       }
     }
   }

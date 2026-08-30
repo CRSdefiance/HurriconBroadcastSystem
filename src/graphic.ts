@@ -1,10 +1,11 @@
 import './styles/graphics.css';
 import './styles/identity-transitions.css';
 import { applyBrand, assetUrl } from './brand';
-import { mockBrand, mockCommentators, mockLowerThird, mockMatch, mockShow, mockSpeedrun } from './mock';
+import { mockBrand, mockBroadcastRail, mockCommentators, mockLowerThird, mockMatch, mockShow, mockSpeedrun } from './mock';
 import { observe } from './replicant';
 import { speedrunFeedIdentities, timerElapsed } from './domain';
-import type { Brand, Commentator, FeedCount, LowerThirdState, MatchState, PlayerState, ShowState, SpeedrunState } from './types';
+import { normalizeBroadcastRail } from './rail';
+import type { Brand, BroadcastRailState, Commentator, FeedCount, LowerThirdState, MatchState, PlayerState, ShowState, SpeedrunState } from './types';
 
 const $ = <T extends HTMLElement>(selector: string): T | null => document.querySelector(selector);
 const text = (selector: string, value: unknown) => { const el = $(selector); if (el) el.textContent = value == null ? '' : String(value); };
@@ -66,6 +67,21 @@ observe<MatchState>('match', mockMatch, (m) => { text('[data-game]',m.game);text
 observe<Commentator[]>('commentators', mockCommentators, (list) => text('[data-commentators]',list.length ? `Commentary: ${list.map((c)=>c.name).join(' · ')}` : ''));
 observe<ShowState>('show', mockShow, (s) => { text('[data-current]',s.currentSegment || (layout === 'break' ? 'Intermission' : 'Live show'));text('[data-next]',s.nextSegment || 'More programming soon');text('[data-next-time]',s.nextSegmentTime || ''); });
 observe<LowerThirdState>('lowerThird', mockLowerThird, (lower) => { const card = $('[data-lower-card]'); card?.classList.toggle('visible', lower.visible);text('[data-lower-title]',lower.title);text('[data-lower-subtitle]',lower.subtitle);text('[data-lower-tertiary]',lower.tertiary); });
+const money = (amount: number, currency: string) => { try { return new Intl.NumberFormat('en-US',{style:'currency',currency:currency||'USD',maximumFractionDigits:amount%1?2:0}).format(amount); } catch { return `${currency||'$'} ${amount.toLocaleString()}`; } };
+const safeSponsorLogo = (url?: string) => url && (url.startsWith('https://') || url.startsWith('/bundles/')) ? url : '';
+observe<BroadcastRailState>('broadcastRail', mockBroadcastRail, (raw) => {
+  if (layout !== 'broadcast-rail') return;
+  const rail=normalizeBroadcastRail(raw);const root=$('[data-broadcast-rail]');root?.classList.toggle('visible',rail.visible);
+  document.querySelectorAll<HTMLElement>('[data-rail-page]').forEach((page)=>{const active=page.dataset.railPage===rail.activeModule;page.classList.toggle('active',active);page.setAttribute('aria-hidden',String(!active));});
+  text('[data-donation-total]',money(rail.donation.total,rail.donation.currency));text('[data-donation-goal]',rail.donation.goal>0?`of ${money(rail.donation.goal,rail.donation.currency)} goal`:'raised');
+  const percent=rail.donation.goal>0?Math.min(100,rail.donation.total/rail.donation.goal*100):0;const donationProgress=$<HTMLElement>('[data-donation-progress]');if(donationProgress)donationProgress.style.width=`${percent}%`;
+  text('[data-latest-donor]',rail.donation.latestDonor?`${rail.donation.latestDonor}${rail.donation.latestAmount?` · ${money(rail.donation.latestAmount,rail.donation.currency)}`:''}`:'');text('[data-latest-message]',rail.donation.latestMessage);
+  const latest=$('[data-latest-donation]');latest?.classList.toggle('hidden',!rail.donation.latestDonor&&!rail.donation.latestMessage);
+  const enabledSponsors=rail.sponsors.filter((sponsor)=>sponsor.enabled);const sponsor=enabledSponsors.length?enabledSponsors[rail.sponsorIndex%enabledSponsors.length]:undefined;text('[data-sponsor-name]',sponsor?.name);
+  const sponsorLogo=$<HTMLImageElement>('[data-sponsor-logo]');if(sponsorLogo){const url=safeSponsorLogo(sponsor?.logoUrl);sponsorLogo.src=url;sponsorLogo.classList.toggle('hidden',!url);sponsorLogo.onerror=()=>sponsorLogo.classList.add('hidden');}
+  text('[data-rail-announcement]',rail.announcement);
+  const rotation=$<HTMLElement>('[data-rail-rotation-progress]');if(rotation){rotation.classList.remove('running');rotation.style.animationDuration=`${rail.rotationSeconds}s`;void rotation.offsetWidth;if(rail.visible&&rail.automatic&&!rail.held)rotation.classList.add('running');}
+});
 
 const requestedFeedCount = Number(previewParams.get('feeds'));
 const previewSpeedrun: SpeedrunState = !window.nodecg && [1, 2, 3, 4].includes(requestedFeedCount)

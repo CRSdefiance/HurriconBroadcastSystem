@@ -30,7 +30,8 @@ writeFileSync(resolve(out, 'package.json'), JSON.stringify({
       { file: 'feed-backgrounds.html', width: 1920, height: 1080, singleInstance: false },
       { file: 'break.html', width: 1920, height: 1080, singleInstance: false },
       { file: 'technical.html', width: 1920, height: 1080, singleInstance: false },
-      { file: 'lower-third.html', width: 1920, height: 1080, singleInstance: false }
+      { file: 'lower-third.html', width: 1920, height: 1080, singleInstance: false },
+      { file: 'broadcast-rail.html', width: 1920, height: 1080, singleInstance: false }
     ]
   }
 }, null, 2));

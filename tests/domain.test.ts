@@ -3,6 +3,7 @@ import { changeScore, defaultMatch, speedrunFeedIdentities, swapPlayers, timerAc
 import { nextSponsor } from '../src/sponsors';
 import { parseSchedule } from '../src/schedule';
 import { fitRect } from '../src/viewport';
+import { advanceBroadcastRail, availableRailModules, defaultBroadcastRail, normalizeBroadcastRail } from '../src/rail';
 
 describe('match operations',()=>{
   it('swaps all player data and scores',()=>{const match=defaultMatch();match.player1={displayName:'Alpha',social:'@a',score:2};match.player2={displayName:'Beta',social:'@b',score:1};const result=swapPlayers(match);expect(result.player1).toEqual({displayName:'Beta',social:'@b',score:1});expect(result.player2.displayName).toBe('Alpha');});
@@ -19,4 +20,24 @@ describe('run timer',()=>{
 });
 describe('speedrun identities',()=>{
   it('migrates legacy runner fields into feed one',()=>expect(speedrunFeedIdentities({feedCount:1,cameraVisible:false,timerVisible:false,guidesVisible:false,game:'Game',runner:'Legacy Runner',pronouns:'they/them',timer:{running:false,elapsedMs:0}})[0]).toEqual({name:'Legacy Runner',pronouns:'they/them',social:undefined}));
+});
+describe('broadcast rail',()=>{
+  it('provides a safe default with all modules enabled',()=>{
+    const rail=defaultBroadcastRail();
+    expect(rail.activeModule).toBe('programming');
+    expect(availableRailModules(rail)).toEqual(['programming']);
+  });
+  it('normalizes unsafe values and skips empty modules',()=>{
+    const rail=normalizeBroadcastRail({rotationSeconds:999,activeModule:'announcement' as never,announcement:'',donation:{total:-4,goal:100,currency:''},sponsors:[{id:'s',name:'Sponsor',enabled:true}],enabledModules:{donation:true,sponsor:true,announcement:true,programming:true}});
+    expect(rail.rotationSeconds).toBe(300);
+    expect(rail.donation.total).toBe(0);
+    expect(rail.activeModule).toBe('donation');
+    expect(availableRailModules(rail)).toEqual(['donation','sponsor','programming']);
+  });
+  it('advances forward and backward while skipping unavailable modules',()=>{
+    const rail=normalizeBroadcastRail({...defaultBroadcastRail(),donation:{total:10,goal:100,currency:'USD'},announcement:'Donate now'});
+    expect(advanceBroadcastRail(rail,1,123).activeModule).toBe('donation');
+    expect(advanceBroadcastRail(rail,-1,123).activeModule).toBe('announcement');
+    expect(advanceBroadcastRail({...rail,held:true},1).activeModule).toBe('donation');
+  });
 });

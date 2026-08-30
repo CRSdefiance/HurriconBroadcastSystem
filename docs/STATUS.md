@@ -11,13 +11,14 @@
 - Per-feed speedrun runner/pronoun/social rails with independent visibility and rotating socials
 - Tournament pronoun/location separation and automatic social rotation
 - Current/up-next and lower-third controls
+- Reusable global broadcast rail with synchronized automatic/manual rotation, safe blank, donation progress, approved latest-donation details, sponsors, announcements, and now/up-next programming
 - Server-only authenticated OBS WebSocket v5 connection, scene switching, status, and exponential reconnect
 - Configurable Fade or custom Stinger scene transitions, per-destination overrides, dashboard selection, and Cut fallback
 - Mock preview data, brand creation/fetch scripts, unit tests, and operator documentation
 
 ## Next V1 modules
 
-- Sponsor folder discovery/rotation UI and real break module
+- Sponsor folder discovery/import and external donation-provider adapters
 - Schedule file watcher/UI and schedule graphic
 - Commentator editor (graphic state model is present)
 - OBS scene/browser-source provisioner and logical feed mapping

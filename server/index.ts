@@ -1,7 +1,8 @@
 import { resolve } from 'node:path';
 import type NodeCG from 'nodecg/types';
 import { defaultMatch, defaultSpeedrun, speedrunFeedIdentities, timerAction } from '../src/domain';
-import type { Brand, Commentator, LowerThirdState, MatchState, ObsState, ShowMode, ShowState, SpeedrunState } from '../src/types';
+import { advanceBroadcastRail, defaultBroadcastRail, normalizeBroadcastRail } from '../src/rail';
+import type { Brand, BroadcastRailState, Commentator, LowerThirdState, MatchState, ObsState, RailModule, ShowMode, ShowState, SpeedrunState } from '../src/types';
 import { listBrandIds, loadBrand } from './branding';
 import { ObsConnectionManager, type ObsConfig } from './obs/ObsConnectionManager';
 
@@ -15,6 +16,7 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
   nodecg.Replicant<LowerThirdState>('lowerThird', { defaultValue: { visible: false, title: '', style: 'person' }, persistent: true });
   const show = nodecg.Replicant<ShowState>('show', { defaultValue: { mode: 'tournament', nextSegment: 'More programming soon' }, persistent: true });
   const speedrun = nodecg.Replicant<SpeedrunState>('speedrun', { defaultValue: defaultSpeedrun(), persistent: true });
+  const broadcastRail = nodecg.Replicant<BroadcastRailState>('broadcastRail', { defaultValue: defaultBroadcastRail(), persistent: true });
   if (!speedrun.value || ![1, 2, 3, 4].includes(speedrun.value.feedCount) || !speedrun.value.timer) {
     speedrun.value = defaultSpeedrun();
   }
@@ -25,6 +27,7 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
     feedSocialsVisible: speedrun.value.feedSocialsVisible ?? true,
     feedIdentities: speedrunFeedIdentities(speedrun.value)
   };
+  broadcastRail.value = normalizeBroadcastRail(broadcastRail.value);
   const activeBrand = nodecg.Replicant<string>('activeBrand', { defaultValue: 'game-grove', persistent: true });
   const brand = nodecg.Replicant<Brand>('brand', { defaultValue: loadBrand(brandsRoot, schemasRoot, 'game-grove').brand, persistent: false });
   const brandStatus = nodecg.Replicant<{ available: string[]; warnings: string[]; error?: string }>('brandStatus', { defaultValue: { available: listBrandIds(brandsRoot), warnings: [] }, persistent: false });
@@ -72,4 +75,24 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
     if (action !== 'start' && action !== 'pause' && action !== 'reset') return;
     speedrun.value = { ...speedrun.value, timer: timerAction(speedrun.value.timer, action) };
   });
+  nodecg.listenFor('rail:update', (data) => {
+    if (!data || typeof data !== 'object') return;
+    broadcastRail.value = normalizeBroadcastRail({ ...broadcastRail.value, ...(data as Partial<BroadcastRailState>), updatedAt: Date.now() });
+  });
+  nodecg.listenFor('rail:control', (action) => {
+    if (action === 'next') broadcastRail.value = advanceBroadcastRail(broadcastRail.value, 1);
+    if (action === 'previous') broadcastRail.value = advanceBroadcastRail(broadcastRail.value, -1);
+    if (action === 'toggleHold') broadcastRail.value = { ...broadcastRail.value, held: !broadcastRail.value.held, updatedAt: Date.now() };
+    if (action === 'show') broadcastRail.value = { ...broadcastRail.value, visible: true, updatedAt: Date.now() };
+    if (action === 'hide') broadcastRail.value = { ...broadcastRail.value, visible: false, updatedAt: Date.now() };
+  });
+  nodecg.listenFor('rail:setModule', (module) => {
+    if (!['donation', 'sponsor', 'announcement', 'programming'].includes(String(module))) return;
+    broadcastRail.value = normalizeBroadcastRail({ ...broadcastRail.value, visible: true, activeModule: module as RailModule, updatedAt: Date.now() });
+  });
+  setInterval(() => {
+    const current = broadcastRail.value;
+    if (!current.visible || !current.automatic || current.held) return;
+    if (Date.now() - current.updatedAt >= current.rotationSeconds * 1000) broadcastRail.value = advanceBroadcastRail(current, 1);
+  }, 1000);
 };

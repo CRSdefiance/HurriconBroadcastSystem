@@ -1,10 +1,11 @@
 import './styles/dashboard.css';
 import './styles/transition-dashboard.css';
 import { applyBrand } from './brand';
-import { mockBrand, mockLowerThird, mockMatch, mockObs, mockShow, mockSpeedrun } from './mock';
+import { mockBrand, mockBroadcastRail, mockLowerThird, mockMatch, mockObs, mockShow, mockSpeedrun } from './mock';
 import { observe } from './replicant';
 import { speedrunFeedIdentities, timerAction, timerElapsed } from './domain';
-import type { Brand, FeedCount, FeedIdentity, LowerThirdState, MatchState, ObsState, ShowMode, ShowState, SpeedrunState } from './types';
+import { advanceBroadcastRail, normalizeBroadcastRail } from './rail';
+import type { Brand, BroadcastRailState, FeedCount, FeedIdentity, LowerThirdState, MatchState, ObsState, RailModule, ShowMode, ShowState, SpeedrunState, SponsorItem } from './types';
 
 const $ = <T extends HTMLElement>(selector:string) => document.querySelector<T>(selector);
 const all = <T extends HTMLElement>(selector:string) => [...document.querySelectorAll<T>(selector)];
@@ -14,6 +15,36 @@ const value = (selector:string) => ($<HTMLInputElement|HTMLSelectElement>(select
 const matchRep=observe<MatchState>('match',mockMatch,(m)=>{all<HTMLInputElement>('[data-field]').forEach((el)=>{if(document.activeElement!==el)el.value=String(m[el.dataset.field as 'game'|'round'|'bestOf']??'')});(['player1','player2'] as const).forEach((side,i)=>{all<HTMLInputElement>(`[data-p${i+1}]`).forEach((el)=>{if(document.activeElement!==el)el.value=String(m[side][el.dataset[`p${i+1}`] as keyof typeof m[typeof side]]??'')});const out=$<HTMLOutputElement>(`[data-score-value="${side}"]`);if(out)out.value=String(m[side].score)});});
 const lowerRep=observe<LowerThirdState>('lowerThird',mockLowerThird,(lower)=>all<HTMLInputElement|HTMLSelectElement>('[data-lower]').forEach((el)=>{if(document.activeElement!==el)el.value=String(lower[el.dataset.lower as keyof LowerThirdState]??'')}));
 const showRep=observe<ShowState>('show',mockShow,(show)=>{all<HTMLInputElement>('[data-show]').forEach((el)=>{if(document.activeElement!==el)el.value=String(show[el.dataset.show as keyof ShowState]??'')});all<HTMLButtonElement>('[data-mode]').forEach((button)=>button.classList.toggle('active',button.dataset.mode===show.mode));});
+let railState = mockBroadcastRail;
+let sponsorDraft: SponsorItem[] = [];
+const renderSponsorEditors = (sponsors: SponsorItem[]) => {
+  sponsorDraft = sponsors.map((sponsor) => ({ ...sponsor }));
+  const box = $('[data-sponsor-editors]');
+  if (!box || box.contains(document.activeElement)) return;
+  box.innerHTML = sponsorDraft.map((_, index) => `<article class="sponsor-editor" data-sponsor-editor="${index}"><div class="sponsor-editor-head"><h3>Sponsor ${index + 1}</h3><button type="button" data-remove-sponsor="${index}" class="danger">Remove</button></div><label class="check"><input type="checkbox" data-sponsor-field="enabled"> Include in rotation</label><label>Display name<input maxlength="120" data-sponsor-field="name"></label><label>Logo URL / bundle path<input maxlength="500" data-sponsor-field="logoUrl" placeholder="https://… or /bundles/…"></label></article>`).join('');
+  all<HTMLElement>('[data-sponsor-editor]').forEach((panel) => {
+    const sponsor = sponsorDraft[Number(panel.dataset.sponsorEditor)];
+    const name = panel.querySelector<HTMLInputElement>('[data-sponsor-field="name"]');
+    const logo = panel.querySelector<HTMLInputElement>('[data-sponsor-field="logoUrl"]');
+    const enabled = panel.querySelector<HTMLInputElement>('[data-sponsor-field="enabled"]');
+    if (name) name.value = sponsor?.name ?? '';
+    if (logo) logo.value = sponsor?.logoUrl ?? '';
+    if (enabled) enabled.checked = sponsor?.enabled !== false;
+  });
+  all<HTMLButtonElement>('[data-remove-sponsor]').forEach((button) => button.addEventListener('click', () => { sponsorDraft.splice(Number(button.dataset.removeSponsor), 1); button.blur(); renderSponsorEditors(sponsorDraft); }));
+};
+const railRep=observe<BroadcastRailState>('broadcastRail',mockBroadcastRail,(rail)=>{
+  railState=normalizeBroadcastRail(rail);
+  all<HTMLInputElement>('[data-rail]').forEach((el)=>{const key=el.dataset.rail as 'automatic'|'rotationSeconds';if(el.type==='checkbox')el.checked=Boolean(railState[key]);else if(document.activeElement!==el)el.value=String(railState[key])});
+  all<HTMLInputElement>('[data-rail-module-enabled]').forEach((el)=>{el.checked=railState.enabledModules[el.dataset.railModuleEnabled as RailModule]});
+  all<HTMLInputElement>('[data-donation]').forEach((el)=>{if(document.activeElement!==el)el.value=String(railState.donation[el.dataset.donation as keyof typeof railState.donation]??'')});
+  const announcement=$<HTMLTextAreaElement>('[data-rail-announcement]');if(announcement&&document.activeElement!==announcement)announcement.value=railState.announcement;
+  const visibility=$('[data-rail-visibility]');if(visibility)visibility.textContent=railState.visible?'On air':'Hidden';
+  const current=$('[data-rail-current]');if(current)current.textContent=`${railState.activeModule}${railState.held?' · held':''}`;
+  all<HTMLButtonElement>('[data-rail-module]').forEach((button)=>button.classList.toggle('active',button.dataset.railModule===railState.activeModule));
+  const hold=$<HTMLButtonElement>('[data-rail-action="toggleHold"]');if(hold)hold.textContent=railState.held?'Resume rotation':'Hold rotation';
+  renderSponsorEditors(railState.sponsors);
+});
 let speedrunState = mockSpeedrun;
 const renderDashboardTimer=()=>{const elapsed=timerElapsed(speedrunState.timer);const hours=Math.floor(elapsed/3_600_000);const minutes=Math.floor(elapsed/60_000)%60;const seconds=Math.floor(elapsed/1000)%60;const tenths=Math.floor(elapsed/100)%10;const out=$<HTMLOutputElement>('[data-speedrun-timer]');if(out)out.value=`${hours?`${String(hours).padStart(2,'0')}:`:''}${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${tenths}`;};
 const speedrunRep=observe<SpeedrunState>('speedrun',mockSpeedrun,(run)=>{speedrunState=run;const identities=speedrunFeedIdentities(run);all<HTMLInputElement>('[data-speedrun]').forEach((el)=>{if(document.activeElement!==el)el.value=String(run[el.dataset.speedrun as keyof SpeedrunState]??'')});all<HTMLInputElement>('[data-speedrun-toggle]').forEach((el)=>{el.checked=Boolean(run[el.dataset.speedrunToggle as keyof SpeedrunState])});all<HTMLInputElement>('[data-feed-identity]').forEach((el)=>{if(document.activeElement===el)return;const [position,field]=el.dataset.feedIdentity!.split(':') as [string,keyof FeedIdentity];el.value=String(identities[Number(position)-1]?.[field]??'')});all<HTMLElement>('[data-feed-identity-panel]').forEach((panel)=>{panel.hidden=Number(panel.dataset.feedIdentityPanel)>run.feedCount});all<HTMLButtonElement>('[data-feed-count]').forEach((button)=>button.classList.toggle('active',Number(button.dataset.feedCount)===run.feedCount));renderDashboardTimer();});
@@ -35,5 +66,15 @@ all<HTMLButtonElement>('[data-timer-action]').forEach((button)=>button.addEventL
 $('[data-action="apply-speedrun"]')?.addEventListener('click',()=>{const current=speedrunRep.get();const checked=(name:string)=>$<HTMLInputElement>(`[data-speedrun-toggle="${name}"]`)?.checked??false;const feedIdentities:FeedIdentity[]=Array.from({length:4},(_,index)=>({name:value(`[data-feed-identity="${index+1}:name"]`),pronouns:value(`[data-feed-identity="${index+1}:pronouns"]`),social:value(`[data-feed-identity="${index+1}:social"]`)}));speedrunRep.set({...current,cameraVisible:checked('cameraVisible'),timerVisible:checked('timerVisible'),guidesVisible:checked('guidesVisible'),feedIdentitiesVisible:checked('feedIdentitiesVisible'),feedSocialsVisible:checked('feedSocialsVisible'),feedIdentities,game:value('[data-speedrun="game"]'),platform:value('[data-speedrun="platform"]'),runner:value('[data-speedrun="runner"]'),pronouns:value('[data-speedrun="pronouns"]'),category:value('[data-speedrun="category"]'),estimate:value('[data-speedrun="estimate"]')});toast('Speedrun layout applied');});
 all<HTMLButtonElement>('[data-lower-action]').forEach((button)=>button.addEventListener('click',()=>{const current=lowerRep.get();lowerRep.set({...current,visible:button.dataset.lowerAction==='show',title:value('[data-lower="title"]'),subtitle:value('[data-lower="subtitle"]'),tertiary:value('[data-lower="tertiary"]'),style:value('[data-lower="style"]') as LowerThirdState['style']});}));
 $('[data-action="apply-show"]')?.addEventListener('click',()=>{showRep.set({...showRep.get(),currentSegment:value('[data-show="currentSegment"]'),nextSegment:value('[data-show="nextSegment"]'),nextSegmentTime:value('[data-show="nextSegmentTime"]')});toast('Programming updated');});
+$('[data-action="add-sponsor"]')?.addEventListener('click',()=>{if(sponsorDraft.length>=12){toast('Sponsor limit is 12');return;}sponsorDraft.push({id:`sponsor-${Date.now()}`,name:'',enabled:true});renderSponsorEditors(sponsorDraft);});
+$('[data-action="apply-rail"]')?.addEventListener('click',()=>{
+  const sponsors=all<HTMLElement>('[data-sponsor-editor]').map((panel,index)=>({id:sponsorDraft[index]?.id||`sponsor-${index+1}`,name:(panel.querySelector<HTMLInputElement>('[data-sponsor-field="name"]')?.value??'').trim(),logoUrl:(panel.querySelector<HTMLInputElement>('[data-sponsor-field="logoUrl"]')?.value??'').trim()||undefined,enabled:panel.querySelector<HTMLInputElement>('[data-sponsor-field="enabled"]')?.checked??true})).filter((sponsor)=>sponsor.name);
+  const donation={total:Number(value('[data-donation="total"]'))||0,goal:Number(value('[data-donation="goal"]'))||0,currency:value('[data-donation="currency"]')||'USD',latestDonor:value('[data-donation="latestDonor"]')||undefined,latestAmount:Number(value('[data-donation="latestAmount"]'))||undefined,latestMessage:value('[data-donation="latestMessage"]')||undefined,updatedAt:Date.now()};
+  const enabledModules=Object.fromEntries((['donation','sponsor','announcement','programming'] as RailModule[]).map((module)=>[module,$<HTMLInputElement>(`[data-rail-module-enabled="${module}"]`)?.checked??false])) as Record<RailModule,boolean>;
+  const next=normalizeBroadcastRail({...railState,automatic:$<HTMLInputElement>('[data-rail="automatic"]')?.checked??true,rotationSeconds:Number(value('[data-rail="rotationSeconds"]'))||12,enabledModules,donation,announcement:value('[data-rail-announcement]'),sponsors,updatedAt:Date.now()});
+  if(window.nodecg)void window.nodecg.sendMessage('rail:update',next);else railRep.set(next);toast('Broadcast rail content applied');
+});
+all<HTMLButtonElement>('[data-rail-action]').forEach((button)=>button.addEventListener('click',()=>{const action=button.dataset.railAction!;if(window.nodecg)void window.nodecg.sendMessage('rail:control',action);else if(action==='next'||action==='previous')railRep.set(advanceBroadcastRail(railState,action==='next'?1:-1));else railRep.set({...railState,visible:action==='show'?true:action==='hide'?false:railState.visible,held:action==='toggleHold'?!railState.held:railState.held,updatedAt:Date.now()});}));
+all<HTMLButtonElement>('[data-rail-module]').forEach((button)=>button.addEventListener('click',()=>{const module=button.dataset.railModule as RailModule;if(window.nodecg)void window.nodecg.sendMessage('rail:setModule',module);else railRep.set({...railState,visible:true,activeModule:module,updatedAt:Date.now()});}));
 $('[data-action="set-brand"]')?.addEventListener('click',()=>{const id=value('[data-brand-select]');if(window.nodecg)void window.nodecg.sendMessage('brand:set',id);toast(`Selected ${id}`);});
 $('[data-action="reload-brand"]')?.addEventListener('click',()=>{if(window.nodecg)void window.nodecg.sendMessage('brand:reload');toast('Brand files reloaded');});
