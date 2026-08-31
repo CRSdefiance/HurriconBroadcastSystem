@@ -1,10 +1,10 @@
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   root: '.',
   base: '/bundles/hurricon-broadcast/shared/',
-  publicDir: false,
+  publicDir: command === 'serve' ? 'brands' : false,
   build: {
     emptyOutDir: true,
     outDir: 'bundles/hurricon-broadcast',
@@ -21,8 +21,9 @@ export default defineConfig({
         lowerThird: resolve(__dirname, 'pages/graphics/lower-third.html'),
         broadcastRail: resolve(__dirname, 'pages/graphics/broadcast-rail.html'),
         transitionOverlay: resolve(__dirname, 'pages/graphics/transition-overlay.html'),
-        setup: resolve(__dirname, 'pages/dashboard/setup.html')
+        setup: resolve(__dirname, 'pages/dashboard/setup.html'),
+        programPreview: resolve(__dirname, 'pages/graphics/program-preview.html')
       }
     }
   }
-});
+}));

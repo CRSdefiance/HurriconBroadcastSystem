@@ -12,4 +12,8 @@ export function applyBrand(brand: Brand): void {
   root.style.setProperty('--brand-panel-opacity', String(brand.shape.panelOpacity));
   root.style.setProperty('--brand-animation-ms', brand.animation.reducedMotion ? '0ms' : `${brand.animation.durationMs}ms`);
 }
-export const assetUrl = (brand: Brand, asset: string): string => `${location.pathname.startsWith('/bundles/') ? '/bundles/hurricon-broadcast/shared' : ''}/brands/${brand.id === 'template' ? '_template' : brand.id}/${asset}`;
+export const assetUrl = (brand: Brand, asset: string): string => {
+  const folder = brand.id === 'template' ? '_template' : brand.id;
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  return import.meta.env.DEV ? `${base}/${folder}/${asset}` : `${base}/brands/${folder}/${asset}`;
+};

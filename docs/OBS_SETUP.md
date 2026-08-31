@@ -46,6 +46,12 @@ For a normal web-browser preview with the scene and feed backgrounds composited 
 
 Graphics allow multiple simultaneous instances, so an OBS Browser Source and ordinary browser previews can remain open together and receive the same live Replicant updates.
 
+For a complete browser-only proof, open:
+
+`http://127.0.0.1:9090/bundles/hurricon-broadcast/graphics/program-preview.html`
+
+This page follows the current Live Control mode and composites the main layout, background placeholders, lower third, global rail, sponsor rotation, and HBS transition overlay. Add `?layout=tournament` or `?layout=speedrun` to hold a specific layout while preparing it. This is a proofing page, not an OBS source: the real capture inputs remain branded placeholders.
+
 Add up to four Display Capture, Window Capture, Game Capture, or capture-card sources and one Video Capture Device for the runner camera. In the Sources list, keep the HBS browser source at the top and every video source underneath it. In HBS Control, enable **Setup labels**, choose the feed count and runner-camera option, then resize/crop each video source into its labeled frame. `Alt`-drag an OBS source edge to crop it, drag normally to resize, and lock each source after placement. Disable **Setup labels** before going live; the borders remain as the finished framing treatment while the labels disappear.
 
 HBS also provides two optional branded background Browser Sources. Add both at 1920×1080 using these URLs:

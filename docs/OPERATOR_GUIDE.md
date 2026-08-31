@@ -17,6 +17,10 @@
 
 NodeCG now exposes two focused panels. **HBS Live Control** contains only frequent on-air actions: scene takes, scores, match status, the run timer, broadcast-rail transport, lower-third visibility, and program summaries. **HBS Setup / Preview** contains text entry, feed layouts, runner identities, donation/sponsor content, branding, transitions, and preview links. Prepare and proof content in Setup, then operate primarily from Live Control.
 
+Use **Open full Program Preview** in Setup / Preview to proof the entire 1920×1080 composition in an ordinary browser. It layers the active tournament, speedrun, interview, break, or technical layout with its scene/feed backgrounds, lower third, global rail, sponsor rotation, and transition overlay. The default URL follows the mode selected in Live Control; the fixed Tournament and Speedrun links are useful while preparing a scene that is not currently live. Capture inputs are represented by branded placeholders because only OBS can composite the real cameras and gameplay feeds.
+
+Always operate Setup through `http://127.0.0.1:9090/dashboard/`. Opening the dashboard panel's HTML file directly is only a disconnected development fallback, so its fields use sample values and cannot change live NodeCG state.
+
 Enter both players, game, round, and best-of value, then click **Apply match info**. Typing stays local until applied; score buttons remain immediate. **Swap players** moves all player metadata and scores. Reset scores has a confirmation. Set the match ready/live/complete as the bracket progresses.
 
 Large Show Control buttons update NodeCG state and ask OBS to switch the configured scene. When OBS is disconnected, state still updates and the red status/error explains what did not switch. Use **Technical difficulties** as the safe-break action; it never stops streaming.
@@ -48,3 +52,7 @@ Tournament player cards always show names and scores. Pronouns and location use 
 Typical source order, top to bottom, is: global rail, lower third, speedrun overlay, runner camera, game feeds, background. Lock the positioned video sources in OBS so routine dashboard operation cannot move them.
 
 Signal path: `console → HDMI splitter → player display + capture device → OBS`; cameras feed capture devices; game and microphones feed the mixer/interface/OBS. Never make players compete through OBS preview latency.
+
+## Brand background checks
+
+After selecting a brand, the Brand settings card states either the configured scene-background file or that the brand uses its CSS gradient. Hurricon currently uses `backgrounds/hurricon-neon-grid.png`; Game Grove intentionally uses the gradient until an image is added to its brand pack. **Reload files** rereads the selected brand without requiring a rebuild. Refresh an already-open graphic if the browser has cached an older file.

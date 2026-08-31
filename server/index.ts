@@ -34,8 +34,11 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
   transitionSettings.value = normalizeTransitionSettings(transitionSettings.value);
   transitionOverlay.value = defaultTransitionOverlay();
   const activeBrand = nodecg.Replicant<string>('activeBrand', { defaultValue: 'game-grove', persistent: true });
-  const brand = nodecg.Replicant<Brand>('brand', { defaultValue: loadBrand(brandsRoot, schemasRoot, 'game-grove').brand, persistent: false });
-  const brandStatus = nodecg.Replicant<{ available: string[]; warnings: string[]; error?: string }>('brandStatus', { defaultValue: { available: listBrandIds(brandsRoot), warnings: [] }, persistent: false });
+  let initialBrand;
+  try { initialBrand = loadBrand(brandsRoot, schemasRoot, activeBrand.value || 'game-grove'); }
+  catch { initialBrand = loadBrand(brandsRoot, schemasRoot, 'game-grove'); activeBrand.value = 'game-grove'; }
+  const brand = nodecg.Replicant<Brand>('brand', { defaultValue: initialBrand.brand, persistent: false });
+  const brandStatus = nodecg.Replicant<{ available: string[]; warnings: string[]; error?: string }>('brandStatus', { defaultValue: { available: listBrandIds(brandsRoot), warnings: initialBrand.warnings }, persistent: false });
   const obs = nodecg.Replicant<ObsState>('obs', { defaultValue: { connected: false, host: nodecg.bundleConfig.obs?.url ?? 'ws://127.0.0.1:4455' }, persistent: false });
 
   const applyBrand = (id: string): void => {
