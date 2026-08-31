@@ -26,6 +26,8 @@ If PowerShell cannot run `npm.ps1`, use `npm.cmd` exactly as shown. Once the ter
 
 Leave this terminal open during the broadcast. Do not launch a second copy. If you see `EADDRINUSE ... 9090`, another copy is already running; use the existing dashboard or close the old Node process before starting again.
 
+The NodeCG Workspace opens HBS Live Control and HBS Setup / Preview as full-width panels so their forms remain readable. You can still resize a panel by dragging its divider or use the panel's maximize button. Use the links between Live Control and Setup inside the Workspace; do not pop those two control panels into `standalone=true` browser windows, because a detached panel has no live Replicant connection. Graphic preview links may safely open in separate browser tabs.
+
 ## 2. Configure OBS WebSocket
 
 HBS uses OBS WebSocket to change scenes when you press a scene button in Live Control.

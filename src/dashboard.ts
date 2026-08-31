@@ -14,6 +14,14 @@ const toast = (message:string) => { const el=$<HTMLElement>('[data-toast]');if(!
 const value = (selector:string) => ($<HTMLInputElement|HTMLSelectElement>(selector)?.value ?? '').trim();
 const setText = (selector:string,content:unknown) => {const element=$(selector);if(element)element.textContent=content==null?'':String(content);};
 
+// Keep navigation between the two HBS panels inside the live NodeCG iframe.
+// Opening these links as a browser pop-out adds standalone=true, which has no
+// live Replicant connection and therefore cannot apply broadcast data.
+all<HTMLAnchorElement>('a[href="setup.html"],a[href="index.html"]').forEach((link) => link.addEventListener('click', (event) => {
+  event.preventDefault();
+  window.location.assign(link.getAttribute('href')!);
+}));
+
 const matchRep=observe<MatchState>('match',mockMatch,(m)=>{all<HTMLInputElement>('[data-field]').forEach((el)=>{if(document.activeElement!==el)el.value=String(m[el.dataset.field as 'game'|'round'|'bestOf']??'')});(['player1','player2'] as const).forEach((side,i)=>{all<HTMLInputElement>(`[data-p${i+1}]`).forEach((el)=>{if(document.activeElement!==el)el.value=String(m[side][el.dataset[`p${i+1}`] as keyof typeof m[typeof side]]??'')});const out=$<HTMLOutputElement>(`[data-score-value="${side}"]`);if(out)out.value=String(m[side].score);setText(`[data-live-player="${side}"]`,m[side].displayName)});});
 const lowerRep=observe<LowerThirdState>('lowerThird',mockLowerThird,(lower)=>{all<HTMLInputElement|HTMLSelectElement>('[data-lower]').forEach((el)=>{if(document.activeElement!==el)el.value=String(lower[el.dataset.lower as keyof LowerThirdState]??'')});setText('[data-live-lower-title]',lower.title||'Nothing queued');setText('[data-live-lower-subtitle]',lower.subtitle);});
 const showRep=observe<ShowState>('show',mockShow,(show)=>{all<HTMLInputElement>('[data-show]').forEach((el)=>{if(document.activeElement!==el)el.value=String(show[el.dataset.show as keyof ShowState]??'')});all<HTMLButtonElement>('[data-mode]').forEach((button)=>button.classList.toggle('active',button.dataset.mode===show.mode));setText('[data-live-show="current"]',show.currentSegment||'Live show');setText('[data-live-show="next"]',show.nextSegment||'More programming soon');setText('[data-live-show="time"]',show.nextSegmentTime);});
