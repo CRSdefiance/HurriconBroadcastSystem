@@ -22,8 +22,8 @@ writeFileSync(resolve(out, 'package.json'), JSON.stringify({
   nodecg: {
     compatibleRange: '^2.8.0',
     dashboardPanels: [
-      { name: 'control', title: 'HBS Live Control', width: 12, file: 'index.html', headerColor: '#172554' },
-      { name: 'setup', title: 'HBS Setup / Preview', width: 12, file: 'setup.html', headerColor: '#312e81' }
+      { name: 'control', title: 'HBS Live Control', width: 10, file: 'index.html', headerColor: '#172554' },
+      { name: 'setup', title: 'HBS Setup / Preview', width: 10, file: 'setup.html', headerColor: '#312e81' }
     ],
     graphics: [
       { file: 'tournament.html', width: 1920, height: 1080, singleInstance: false },
