@@ -32,7 +32,7 @@ HBS uses OBS WebSocket to change scenes when you press a scene button in Live Co
 
 1. Open OBS Studio 28 or later.
 2. Select **Tools → WebSocket Server Settings**.
-3. Check **Enable WebSocket server**.
+3. Check **Enable WebSocket server**. This checkbox must be enabled; a password alone does not start the server.
 4. Leave the server port at **4455**.
 5. Check **Enable Authentication**, create a password, and save it somewhere safe.
 6. Copy `config/hurricon-broadcast.example.json` to `config/hurricon-broadcast.json`.
@@ -215,6 +215,10 @@ The browser proof is useful for checking HBS data and layering, but it contains 
 
 **OBS disconnected:** Confirm OBS is open, WebSocket is enabled on port 4455, the password matches `config/hurricon-broadcast.json`, and HBS was restarted after editing the file.
 
+**`connect ECONNREFUSED 127.0.0.1:4455`:** OBS is not accepting connections. Open **Tools → WebSocket Server Settings**, check **Enable WebSocket server**, click **Apply** or **OK**, and restart HBS. If OBS and HBS are on different computers, replace `ws://127.0.0.1:4455` in the config with the OBS computer's private LAN address, such as `ws://10.6.62.34:4455`; keep both computers on the same trusted network and allow OBS through Windows Firewall. Never expose port 4455 to the public Internet.
+
+**Password appeared in a screenshot or chat:** Treat it as compromised. Click **Generate Password** in OBS WebSocket settings, click **Apply**, replace the password in `config/hurricon-broadcast.json`, and restart HBS.
+
 **Port 9090 already in use:** NodeCG is already running. Open the existing dashboard at `http://127.0.0.1:9090/dashboard/` instead of launching another copy. If it is stuck, find the process with `Get-NetTCPConnection -LocalPort 9090` and stop that specific PID.
 
 **Browser source is black or stale:** Right-click the source → **Properties** → confirm the URL, width, and height. Ensure **Shutdown source when not visible** and **Refresh browser when scene becomes active** are off. Use **Refresh cache of current page** once during troubleshooting.
@@ -226,4 +230,3 @@ The browser proof is useful for checking HBS data and layering, but it contains 
 **Scene button does not switch OBS:** The scene name in OBS must exactly match the `sceneMap` name, including capitalization, spaces, and punctuation.
 
 **Audio is delayed or doubled:** Monitor audio through one path only. Avoid monitoring the same microphone in both OBS and an external application unless you intentionally need both.
-
