@@ -78,8 +78,13 @@ observe<BroadcastRailState>('broadcastRail', mockBroadcastRail, (raw) => {
   const percent=rail.donation.goal>0?Math.min(100,rail.donation.total/rail.donation.goal*100):0;const donationProgress=$<HTMLElement>('[data-donation-progress]');if(donationProgress)donationProgress.style.width=`${percent}%`;
   text('[data-latest-donor]',rail.donation.latestDonor?`${rail.donation.latestDonor}${rail.donation.latestAmount?` · ${money(rail.donation.latestAmount,rail.donation.currency)}`:''}`:'');text('[data-latest-message]',rail.donation.latestMessage);
   const latest=$('[data-latest-donation]');latest?.classList.toggle('hidden',!rail.donation.latestDonor&&!rail.donation.latestMessage);
-  const enabledSponsors=rail.sponsors.filter((sponsor)=>sponsor.enabled);const sponsor=enabledSponsors.length?enabledSponsors[rail.sponsorIndex%enabledSponsors.length]:undefined;text('[data-sponsor-name]',sponsor?.name);
-  const sponsorLogo=$<HTMLImageElement>('[data-sponsor-logo]');if(sponsorLogo){const url=safeSponsorLogo(sponsor?.logoUrl);sponsorLogo.src=url;sponsorLogo.classList.toggle('hidden',!url);sponsorLogo.onerror=()=>sponsorLogo.classList.add('hidden');}
+  // Do not rewrite sponsor content while the rail is showing another module.
+  // The previous sponsor must finish fading out before a new sponsor is
+  // painted, otherwise a sponsor-index update can flash through the fade.
+  if (rail.activeModule === 'sponsor') {
+    const enabledSponsors=rail.sponsors.filter((sponsor)=>sponsor.enabled);const sponsor=enabledSponsors.length?enabledSponsors[rail.sponsorIndex%enabledSponsors.length]:undefined;text('[data-sponsor-name]',sponsor?.name);
+    const sponsorLogo=$<HTMLImageElement>('[data-sponsor-logo]');if(sponsorLogo){const url=safeSponsorLogo(sponsor?.logoUrl);sponsorLogo.src=url;sponsorLogo.classList.toggle('hidden',!url);sponsorLogo.onerror=()=>sponsorLogo.classList.add('hidden');}
+  }
   text('[data-rail-announcement]',rail.announcement);
   const rotation=$<HTMLElement>('[data-rail-rotation-progress]');if(rotation){rotation.classList.remove('running');rotation.style.animationDuration=`${rail.rotationSeconds}s`;void rotation.offsetWidth;if(rail.visible&&rail.automatic&&!rail.held)rotation.classList.add('running');}
 });
