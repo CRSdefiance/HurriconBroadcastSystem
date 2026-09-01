@@ -14,12 +14,14 @@ const toast = (message:string) => { const el=$<HTMLElement>('[data-toast]');if(!
 const value = (selector:string) => ($<HTMLInputElement|HTMLSelectElement>(selector)?.value ?? '').trim();
 const setText = (selector:string,content:unknown) => {const element=$(selector);if(element)element.textContent=content==null?'':String(content);};
 
-// Keep navigation between the two HBS panels inside the live NodeCG iframe.
-// Opening these links as a browser pop-out adds standalone=true, which has no
-// live Replicant connection and therefore cannot apply broadcast data.
+// Keep navigation between the two HBS panels live in both dashboard and
+// standalone contexts. NodeCG injects its API only when standalone=true is
+// retained on a detached panel URL.
 all<HTMLAnchorElement>('a[href="setup.html"],a[href="index.html"]').forEach((link) => link.addEventListener('click', (event) => {
   event.preventDefault();
-  window.location.assign(link.getAttribute('href')!);
+  const target = link.getAttribute('href')!;
+  const standalone = new URLSearchParams(window.location.search).has('standalone');
+  window.location.assign(standalone ? `${target}?standalone=true` : target);
 }));
 
 const matchRep=observe<MatchState>('match',mockMatch,(m)=>{all<HTMLInputElement>('[data-field]').forEach((el)=>{if(document.activeElement!==el)el.value=String(m[el.dataset.field as 'game'|'round'|'bestOf']??'')});(['player1','player2'] as const).forEach((side,i)=>{all<HTMLInputElement>(`[data-p${i+1}]`).forEach((el)=>{if(document.activeElement!==el)el.value=String(m[side][el.dataset[`p${i+1}`] as keyof typeof m[typeof side]]??'')});const out=$<HTMLOutputElement>(`[data-score-value="${side}"]`);if(out)out.value=String(m[side].score);setText(`[data-live-player="${side}"]`,m[side].displayName)});});
