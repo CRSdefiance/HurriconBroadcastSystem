@@ -6,6 +6,7 @@ import { observe } from './replicant';
 import { speedrunFeedIdentities, timerElapsed } from './domain';
 import { normalizeBroadcastRail } from './rail';
 import { normalizeTransitionOverlay } from './transition';
+import { normalizeSocialHandle, renderSocialIcon } from './social';
 import type { Brand, BroadcastRailState, Commentator, FeedCount, HbsTransitionMode, LowerThirdState, MatchState, PlayerState, ShowState, SpeedrunState, TransitionOverlayState } from './types';
 
 const $ = <T extends HTMLElement>(selector: string): T | null => document.querySelector(selector);
@@ -61,7 +62,8 @@ const renderPlayerIdentity = (side: 'p1'|'p2', player: PlayerState) => {
   text(`[data-${side}-name]`, player.displayName);
   text(`[data-${side}-pronouns]`, player.pronouns);
   text(`[data-${side}-location]`, player.location);
-  text(`[data-${side}-social]`, player.social);
+  text(`[data-${side}-social]`, normalizeSocialHandle(player.social));
+  renderSocialIcon(`[data-${side}-social-icon]`, player.socialPlatform);
   $(`.tournament .${side}`)?.classList.toggle('has-social', Boolean(player.social));
 };
 observe<MatchState>('match', mockMatch, (m) => { text('[data-game]',m.game);text('[data-round]',m.round);text('[data-status]',m.status);renderPlayerIdentity('p1',m.player1);renderPlayerIdentity('p2',m.player2);text('[data-p1-score]',m.player1.score);text('[data-p2-score]',m.player2.score);text('[data-best]',m.bestOf ? `BEST OF ${m.bestOf}` : ''); });
@@ -136,7 +138,8 @@ observe<SpeedrunState>('speedrun', previewSpeedrun, (run) => {
     card?.classList.toggle('has-social', Boolean((run.feedSocialsVisible ?? true) && identity.social));
     text(`[data-feed-runner="${position}"]`, identity.name);
     text(`[data-feed-pronouns="${position}"]`, identity.pronouns);
-    text(`[data-feed-social="${position}"]`, identity.social);
+    text(`[data-feed-social="${position}"]`, normalizeSocialHandle(identity.social));
+    renderSocialIcon(`[data-feed-social-icon="${position}"]`, identity.socialPlatform);
   });
   text('[data-run-game]', run.game); text('[data-run-platform]', run.platform); text('[data-runner]', run.runner); text('[data-runner-pronouns]', run.pronouns); text('[data-run-category]', run.category); text('[data-run-category-footer]', run.category); text('[data-run-estimate]', run.estimate); text('[data-feed-label]', `${run.feedCount} ${run.feedCount === 1 ? 'feed' : 'feeds'}`);
   document.body.classList.toggle('guides-visible', run.guidesVisible);

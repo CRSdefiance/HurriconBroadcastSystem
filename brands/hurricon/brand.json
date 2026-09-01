@@ -6,7 +6,7 @@
   "website": "hurricon.org",
   "socialHandle": "@HurriconWV",
   "assets": {
-    "logoPrimary": "assets/logo-primary.svg",
+    "logoPrimary": "assets/logo-primary.png",
     "logoMark": "assets/logo-mark.svg",
     "fallbackSponsor": "assets/logo-mark.svg",
     "background": "backgrounds/hurricon-neon-grid.png",

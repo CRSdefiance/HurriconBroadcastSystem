@@ -5,10 +5,9 @@
   "shortName": "Game Grove",
   "website": "gamegrove.gg",
   "socialHandle": "@GameGrove",
-  "assets": { "logoPrimary": "assets/logo-primary.svg", "logoMark": "assets/logo-mark.svg", "fallbackSponsor": "assets/logo-mark.svg" },
+  "assets": { "logoPrimary": "assets/logo-primary.png", "logoMark": "assets/logo-mark.svg", "fallbackSponsor": "assets/logo-mark.svg" },
   "colors": { "primary": "#7047eb", "secondary": "#18d4aa", "accent": "#ffb84d", "background": "#09071a", "panel": "#17122c", "text": "#ffffff", "mutedText": "#c9c0e9", "player1": "#ff496d", "player2": "#32a8ff", "success": "#28d17c", "warning": "#ffb84d" },
   "typography": { "headingFamily": "Arial, Helvetica, sans-serif", "bodyFamily": "Arial, Helvetica, sans-serif", "numericFamily": "Consolas, monospace", "headingWeight": 800 },
   "shape": { "cornerRadius": 18, "borderWidth": 3, "panelOpacity": 0.95 },
   "animation": { "durationMs": 300, "reducedMotion": false }
 }
-

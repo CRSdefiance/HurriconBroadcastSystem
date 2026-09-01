@@ -8,7 +8,7 @@ export const defaultSpeedrun = (): SpeedrunState => ({ feedCount: 1, cameraVisib
 export const speedrunFeedIdentities = (run: SpeedrunState): FeedIdentity[] => Array.from({ length: 4 }, (_, index) => {
   const existing = run.feedIdentities?.[index];
   const legacy: FeedIdentity = index === 0 ? { name: run.runner, pronouns: run.pronouns } : { name: '' };
-  return { name: existing?.name ?? legacy.name, pronouns: existing?.pronouns ?? legacy.pronouns, social: existing?.social };
+  return { name: existing?.name ?? legacy.name, pronouns: existing?.pronouns ?? legacy.pronouns, social: existing?.social, socialPlatform: existing?.socialPlatform };
 });
 export function timerElapsed(timer: RunTimerState, now = Date.now()): number { return timer.running && timer.startedAt ? timer.elapsedMs + Math.max(0, now - timer.startedAt) : timer.elapsedMs; }
 export function timerAction(timer: RunTimerState, action: 'start'|'pause'|'reset', now = Date.now()): RunTimerState {

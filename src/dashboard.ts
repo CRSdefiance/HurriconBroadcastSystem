@@ -6,13 +6,20 @@ import { observe } from './replicant';
 import { speedrunFeedIdentities, timerAction, timerElapsed } from './domain';
 import { advanceBroadcastRail, normalizeBroadcastRail } from './rail';
 import { normalizeTransitionSettings } from './transition';
-import type { Brand, BroadcastRailState, FeedCount, FeedIdentity, HbsTransitionMode, LowerThirdState, MatchState, ObsState, RailModule, ShowMode, ShowState, SpeedrunState, SponsorItem, TransitionOverlayState, TransitionSettings } from './types';
+import { socialPlatforms } from './social';
+import type { Brand, BroadcastRailState, FeedCount, FeedIdentity, HbsTransitionMode, LowerThirdState, MatchState, ObsState, RailModule, ShowMode, ShowState, SocialPlatform, SpeedrunState, SponsorItem, TransitionOverlayState, TransitionSettings } from './types';
 
 const $ = <T extends HTMLElement>(selector:string) => document.querySelector<T>(selector);
 const all = <T extends HTMLElement>(selector:string) => [...document.querySelectorAll<T>(selector)];
 const toast = (message:string) => { const el=$<HTMLElement>('[data-toast]');if(!el)return;el.textContent=message;el.classList.add('visible');setTimeout(()=>el.classList.remove('visible'),2200); };
 const value = (selector:string) => ($<HTMLInputElement|HTMLSelectElement>(selector)?.value ?? '').trim();
 const setText = (selector:string,content:unknown) => {const element=$(selector);if(element)element.textContent=content==null?'':String(content);};
+const renderSocialPlatformOptions = () => all<HTMLSelectElement>('[data-social-platform]').forEach((select) => {
+  const selected = select.value || 'twitch';
+  select.innerHTML = socialPlatforms.map((platform) => `<option value="${platform.value}">${platform.label}</option>`).join('');
+  select.value = selected;
+});
+renderSocialPlatformOptions();
 
 // Keep navigation between the two HBS panels live in both dashboard and
 // standalone contexts. NodeCG injects its API only when standalone=true is
@@ -109,3 +116,38 @@ const applyPreset = (value:unknown) => {
 };
 presetCard.querySelector('[data-preset-save]')?.addEventListener('click',()=>{const preset=currentPreset();const blob=new Blob([JSON.stringify(preset,null,2)],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`${preset.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'hbs-preset'}.json`;link.click();URL.revokeObjectURL(link.href);presetMessage(`Saved ${preset.name}.`);});
 const presetFile=presetCard.querySelector<HTMLInputElement>('[data-preset-file]');presetCard.querySelector('[data-preset-load]')?.addEventListener('click',()=>presetFile?.click());presetFile?.addEventListener('change',async()=>{const file=presetFile.files?.[0];if(!file)return;try{applyPreset(JSON.parse(await file.text()));}catch(error){presetMessage(error instanceof Error?error.message:'Could not load preset.');}finally{presetFile.value='';}});
+// Platform pickers keep operator entry compact: choose the service once, then
+// type only the channel name that should appear beside its recognizable logo.
+const installSocialControls = () => all<HTMLInputElement>('[data-p1="social"],[data-p2="social"],[data-feed-identity$=":social"]').forEach((input) => {
+  if (input.parentElement?.parentElement?.querySelector('[data-social-platform]')) return;
+  const player = input.getAttribute('data-p1') === 'social' ? 'p1' : input.getAttribute('data-p2') === 'social' ? 'p2' : undefined;
+  const feed = input.dataset.feedIdentity?.split(':')[0];
+  const select = document.createElement('select');
+  select.dataset.socialPlatform = '';
+  if (player) select.setAttribute(`data-${player}`, 'socialPlatform');
+  if (feed) select.dataset.feedSocialPlatform = feed;
+  select.innerHTML = socialPlatforms.map((platform) => `<option value="${platform.value}">${platform.label}</option>`).join('');
+  const platformLabel = document.createElement('label'); platformLabel.textContent = 'Platform'; platformLabel.append(select);
+  input.placeholder = 'name, not a full link';
+  const handleLabel = input.parentElement; if (handleLabel?.firstChild) handleLabel.firstChild.textContent = 'Handle / username';
+  handleLabel?.before(platformLabel);
+});
+installSocialControls();
+observe<MatchState>('match', mockMatch, (match) => (['player1','player2'] as const).forEach((side, index) => {
+  const select = $<HTMLSelectElement>(`[data-p${index + 1}="socialPlatform"]`); if (select && document.activeElement !== select) select.value = match[side].socialPlatform ?? 'twitch';
+}));
+observe<SpeedrunState>('speedrun', mockSpeedrun, (run) => speedrunFeedIdentities(run).forEach((identity, index) => {
+  const select = $<HTMLSelectElement>(`[data-feed-social-platform="${index + 1}"]`); if (select && document.activeElement !== select) select.value = identity.socialPlatform ?? 'twitch';
+}));
+document.addEventListener('click', (event) => {
+  const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
+  if (!button) return;
+  if (button.dataset.action === 'apply') queueMicrotask(() => {
+    const match = matchRep.get();
+    matchRep.set({ ...match, player1: { ...match.player1, socialPlatform: (value('[data-p1="socialPlatform"]') || 'twitch') as SocialPlatform }, player2: { ...match.player2, socialPlatform: (value('[data-p2="socialPlatform"]') || 'twitch') as SocialPlatform } });
+  });
+  if (button.dataset.action === 'apply-speedrun') queueMicrotask(() => {
+    const run = speedrunRep.get(); const identities = speedrunFeedIdentities(run).map((identity, index) => ({ ...identity, socialPlatform: (value(`[data-feed-social-platform="${index + 1}"]`) || 'twitch') as SocialPlatform }));
+    speedrunRep.set({ ...run, feedIdentities: identities });
+  });
+});

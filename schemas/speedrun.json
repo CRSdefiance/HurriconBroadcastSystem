@@ -18,7 +18,8 @@
         "properties": {
           "name": { "type": "string", "maxLength": 140 },
           "pronouns": { "type": "string", "maxLength": 80 },
-          "social": { "type": "string", "maxLength": 140 }
+          "social": { "type": "string", "maxLength": 140 },
+          "socialPlatform": { "enum": ["twitch", "youtube", "x", "instagram", "tiktok", "discord", "bluesky", "other"] }
         },
         "additionalProperties": false
       }
