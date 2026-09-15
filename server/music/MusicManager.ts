@@ -86,9 +86,37 @@ export class MusicManager {
     res.sendFile(path);
   };
 
+  serveRainwave = async (req: Request, res: Response): Promise<void> => {
+    const key = String(req.params.station || '').replace(/\.mp3$/i, '');
+    if (!rainwaveStations.some((station) => station.key === key)) { res.status(404).send('Station not found'); return; }
+    try {
+      this.log.info(`Rainwave audio client connected to ${key}.`);
+      const upstream = await fetch(`https://relay.rainwave.cc/${key}.mp3`, { headers: { 'User-Agent': 'HurriconBroadcastSystem/0.1' } });
+      if (!upstream.ok || !upstream.body) throw new Error(`Rainwave relay returned HTTP ${upstream.status}`);
+      res.status(200);
+      res.setHeader('Content-Type', upstream.headers.get('content-type') || 'audio/mpeg');
+      res.setHeader('Cache-Control', 'no-cache, no-store');
+      res.setHeader('Connection', 'keep-alive');
+      const reader = upstream.body.getReader();
+      let closed = false;
+      res.on('close', () => { closed = true; void reader.cancel(); this.log.info(`Rainwave audio client disconnected from ${key}.`); });
+      while (!closed) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (!res.write(Buffer.from(value))) await new Promise<void>((resolveDrain) => res.once('drain', resolveDrain));
+      }
+      if (!res.writableEnded) res.end();
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      this.log.warn(`Rainwave audio relay unavailable: ${message}`);
+      if (!res.headersSent) res.status(502).send('Rainwave audio relay unavailable');
+      else if (!res.writableEnded) res.end();
+    }
+  };
+
   private applyRainwaveStream(state: MusicState): void {
     const station = rainwaveStations.find((item) => item.key === state.rainwaveStation) ?? rainwaveStations[4];
-    this.state.set({ ...state, rainwaveStation: station.key, streamUrl: `https://relay.rainwave.cc/${station.key}.mp3`, trackKey: `rainwave:${station.key}`, status: state.playing ? state.status : 'stopped', error: undefined });
+    this.state.set({ ...state, rainwaveStation: station.key, streamUrl: `/hbs-media/rainwave/${station.key}.mp3`, trackKey: `rainwave:${station.key}`, status: state.playing ? state.status : 'stopped', error: undefined });
   }
 
   private ensureLocalTrack(state: MusicState, advance: boolean): void {

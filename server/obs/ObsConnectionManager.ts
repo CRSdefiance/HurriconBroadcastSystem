@@ -84,6 +84,29 @@ export class ObsConnectionManager {
     await this.applyTransition(transition);
     this.transitionOverride = transition;
   }
+  async ensureMusicSource(): Promise<void> {
+    const sceneName = this.sceneFor('interstitial');
+    if (!sceneName) throw new Error('No OBS interstitial scene is configured.');
+    const inputName = 'HBS Music Player';
+    // Changing the URL forces OBS's CEF instance to load the current bundle;
+    // its refresh-properties button is not reliable across OBS versions.
+    const url = `http://127.0.0.1:9090/bundles/hurricon-broadcast/graphics/music-player.html?output=1&v=${Date.now()}`;
+    const inputs = await this.client.call('GetInputList');
+    const existing = inputs.inputs.find((input) => input.inputName === inputName);
+    const inputSettings = { url, width: 1920, height: 1080, reroute_audio: true, shutdown: false, restart_when_active: false };
+    if (existing && existing.inputKind !== 'browser_source') throw new Error(`OBS already has a non-browser input named ${inputName}. Rename it and try again.`);
+    if (existing) await this.client.call('SetInputSettings', { inputName, inputSettings, overlay: true });
+    else await this.client.call('CreateInput', { sceneName, inputName, inputKind: 'browser_source', inputSettings, sceneItemEnabled: true });
+    const items = await this.client.call('GetSceneItemList', { sceneName });
+    const sceneItem = items.sceneItems.find((item) => item.sourceName === inputName);
+    if (!sceneItem) await this.client.call('CreateSceneItem', { sceneName, sourceName: inputName, sceneItemEnabled: true });
+    else if (!sceneItem.sceneItemEnabled) await this.client.call('SetSceneItemEnabled', { sceneName, sceneItemId: sceneItem.sceneItemId as number, sceneItemEnabled: true });
+    if (existing) {
+      try { await this.client.call('PressInputPropertiesButton', { inputName, propertyName: 'refreshnocache' }); }
+      catch { /* Older Browser Source builds may not expose the refresh button. */ }
+    }
+    this.log.info(`OBS music Browser Source is ready in ${sceneName}.`);
+  }
   private async applyTransition(transition: TransitionSpec): Promise<void> {
     await this.client.call('SetCurrentSceneTransition', { transitionName: transition.name });
     const current = await this.client.call('GetCurrentSceneTransition');

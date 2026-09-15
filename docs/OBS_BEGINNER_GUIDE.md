@@ -101,6 +101,8 @@ Create a third reusable scene named **HBS - Music Audio**. Add a Browser source 
 
 The page is intentionally visually blank; it is the single audio player controlled by HBS. The `?output=1` part is required. Add **HBS - Music Audio** as a nested Scene source to every OBS scene across which music may continue. Reusing one source prevents a second copy of the stream from playing and allows the fade to continue while scenes change.
 
+As a convenience, pressing **Start / fade in** also checks OBS for an input named `HBS Music Player`. If it is missing and `HBS - Interstitial` exists, HBS creates and configures that Browser Source in the interstitial scene automatically. The reusable scene arrangement above is still recommended when music must continue across several scenes.
+
 ## 6. Build the tournament scene
 
 Select `HBS - Tournament` and add these sources in this order (top to bottom):
@@ -270,6 +272,8 @@ The browser proof is useful for checking HBS data and layering, but it contains 
 
 **Audio is delayed or doubled:** Monitor audio through one path only. Avoid monitoring the same microphone in both OBS and an external application unless you intentionally need both.
 
-**Music metadata appears but there is no sound:** Confirm the Browser source URL ends in `?output=1`, **Control audio via OBS** is enabled, its mixer channel is not muted, and its volume fader is up. The ordinary interstitial preview deliberately does not output audio.
+**Music metadata appears but there is no sound:** Confirm an OBS Browser source named `HBS Music Player` exists and its URL ends in `?output=1`. Pressing **Start / fade in** can create or repair it automatically when `HBS - Interstitial` exists. Confirm **Control audio via OBS** is enabled, its mixer channel is not muted, and its volume fader is up. The ordinary interstitial preview deliberately does not output audio.
+
+**The OBS meter moves, but I cannot hear music through my speakers:** That can be normal. **Control audio via OBS** routes the source to the stream/recording, while local monitoring defaults to off. Open **Advanced Audio Properties** from the Audio Mixer and set `HBS Music Player` to **Monitor and Output** if the operator also needs to hear it. Use headphones and avoid monitoring the same source through another path, or you may create echo.
 
 **Local playlist is empty:** Put supported audio files (`.mp3`, `.ogg`, `.wav`, `.flac`, `.m4a`, `.aac`, or `.opus`) inside a direct subfolder of `music`, then click **Refresh folders & stations**. Loose files directly inside `music` are not treated as a playlist.

@@ -67,6 +67,7 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
   const musicManager = new MusicManager(nodecg.bundleConfig.music ?? {}, { get: () => music.value, set: (value) => { music.value = value; }, setLibrary: (value) => { musicLibrary.value = value; } }, nodecg.log);
   const musicRouter = nodecg.Router();
   musicRouter.get('/audio/:folder/:file', musicManager.serveAudio);
+  musicRouter.get('/rainwave/:station', musicManager.serveRainwave);
   nodecg.mount('/hbs-media', musicRouter);
   void musicManager.start().catch((error) => nodecg.log.warn(`Music service startup failed: ${error instanceof Error ? error.message : String(error)}`));
   nodecg.listenFor('brand:set', (id) => { if (typeof id === 'string') applyBrand(id); });
@@ -122,8 +123,12 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
     speedrun.value = { ...speedrun.value, timer: timerAction(speedrun.value.timer, action) };
   });
   nodecg.listenFor('music:configure', (data) => { if (data && typeof data === 'object') musicManager.configure(data as Partial<MusicState>); });
-  nodecg.listenFor('music:control', (action) => {
-    if (action === 'play') musicManager.play();
+  nodecg.listenFor('music:control', async (action) => {
+    if (action === 'play') {
+      try { await controller.ensureMusicSource(); }
+      catch (error) { nodecg.log.warn(`Could not prepare OBS music source: ${error instanceof Error ? error.message : String(error)}`); }
+      musicManager.play();
+    }
     if (action === 'stop') musicManager.stopPlayback();
     if (action === 'next') musicManager.next();
     if (action === 'refresh') void musicManager.refreshLibrary();
