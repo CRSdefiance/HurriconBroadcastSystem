@@ -6,8 +6,8 @@ import type { ShowMode, ShowState } from './types';
 
 const params = new URLSearchParams(location.search);
 const requested = params.get('layout')?.toLowerCase();
-const fixedLayouts: Record<string, string> = { tournament: 'tournament', gameplay: 'speedrun', speedrun: 'speedrun', interview: 'show', stage: 'show', show: 'show', break: 'break', schedule: 'break', technical: 'technical' };
-const modeLayouts: Record<ShowMode, string> = { tournament: 'tournament', gameplay: 'speedrun', interview: 'show', stage: 'show', break: 'break', schedule: 'break', technical: 'technical' };
+const fixedLayouts: Record<string, string> = { tournament: 'tournament', gameplay: 'speedrun', speedrun: 'speedrun', interview: 'show', stage: 'show', show: 'show', interstitial: 'interstitial', break: 'break', schedule: 'break', technical: 'technical' };
+const modeLayouts: Record<ShowMode, string> = { tournament: 'tournament', gameplay: 'speedrun', interview: 'show', stage: 'show', interstitial: 'interstitial', break: 'break', schedule: 'break', technical: 'technical' };
 const fixedLayout = requested ? fixedLayouts[requested] : undefined;
 const frame = document.querySelector<HTMLIFrameElement>('[data-preview-main]');
 const label = document.querySelector<HTMLElement>('[data-preview-layout]');

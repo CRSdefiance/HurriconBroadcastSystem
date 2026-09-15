@@ -3,11 +3,13 @@ import type NodeCG from 'nodecg/types';
 import { defaultMatch, defaultSpeedrun, speedrunFeedIdentities, timerAction } from '../src/domain';
 import { advanceBroadcastRail, defaultBroadcastRail, normalizeBroadcastRail } from '../src/rail';
 import { defaultTransitionOverlay, defaultTransitionSettings, normalizeTransitionSettings, transitionHalfMs } from '../src/transition';
-import type { Brand, BroadcastRailState, Commentator, LowerThirdState, MatchState, ObsState, RailModule, ShowMode, ShowState, SpeedrunState, TransitionOverlayState, TransitionSettings } from '../src/types';
+import { defaultInterstitial, defaultMusic, normalizeInterstitial, normalizeMusic, rainwaveStations } from '../src/interstitial';
+import type { Brand, BroadcastRailState, Commentator, InterstitialState, LowerThirdState, MatchState, MusicLibraryState, MusicState, ObsState, RailModule, ShowMode, ShowState, SpeedrunState, TransitionOverlayState, TransitionSettings } from '../src/types';
 import { listBrandIds, loadBrand } from './branding';
+import { MusicManager } from './music/MusicManager';
 import { ObsConnectionManager, type ObsConfig } from './obs/ObsConnectionManager';
 
-type Config = { obs?: ObsConfig };
+type Config = { obs?: ObsConfig; music?: { localRoot?: string } };
 
 export = (nodecg: NodeCG.ServerAPI<Config>) => {
   const brandsRoot = resolve(__dirname, '../brands');
@@ -20,6 +22,9 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
   const broadcastRail = nodecg.Replicant<BroadcastRailState>('broadcastRail', { defaultValue: defaultBroadcastRail(), persistent: true });
   const transitionSettings = nodecg.Replicant<TransitionSettings>('transitionSettings', { defaultValue: defaultTransitionSettings(), persistent: true });
   const transitionOverlay = nodecg.Replicant<TransitionOverlayState>('transitionOverlay', { defaultValue: defaultTransitionOverlay(), persistent: false });
+  const interstitial = nodecg.Replicant<InterstitialState>('interstitial', { defaultValue: defaultInterstitial(), persistent: true });
+  const music = nodecg.Replicant<MusicState>('music', { defaultValue: defaultMusic(), persistent: true });
+  const musicLibrary = nodecg.Replicant<MusicLibraryState>('musicLibrary', { defaultValue: { folders: [], stations: rainwaveStations }, persistent: false });
   if (!speedrun.value || ![1, 2, 3, 4].includes(speedrun.value.feedCount) || !speedrun.value.timer) {
     speedrun.value = defaultSpeedrun();
   }
@@ -33,6 +38,8 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
   broadcastRail.value = normalizeBroadcastRail(broadcastRail.value);
   transitionSettings.value = normalizeTransitionSettings(transitionSettings.value);
   transitionOverlay.value = defaultTransitionOverlay();
+  interstitial.value = normalizeInterstitial(interstitial.value);
+  music.value = { ...normalizeMusic(music.value), playing: false, status: 'stopped' };
   const activeBrand = nodecg.Replicant<string>('activeBrand', { defaultValue: 'game-grove', persistent: true });
   let initialBrand;
   try { initialBrand = loadBrand(brandsRoot, schemasRoot, activeBrand.value || 'game-grove'); }
@@ -57,6 +64,11 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
 
   const controller = new ObsConnectionManager(nodecg.bundleConfig.obs ?? {}, (next) => { obs.value = { ...obs.value, ...next }; }, nodecg.log);
   void controller.start();
+  const musicManager = new MusicManager(nodecg.bundleConfig.music ?? {}, { get: () => music.value, set: (value) => { music.value = value; }, setLibrary: (value) => { musicLibrary.value = value; } }, nodecg.log);
+  const musicRouter = nodecg.Router();
+  musicRouter.get('/audio/:folder/:file', musicManager.serveAudio);
+  nodecg.mount('/hbs-media', musicRouter);
+  void musicManager.start().catch((error) => nodecg.log.warn(`Music service startup failed: ${error instanceof Error ? error.message : String(error)}`));
   nodecg.listenFor('brand:set', (id) => { if (typeof id === 'string') applyBrand(id); });
   nodecg.listenFor('brand:reload', () => applyBrand(activeBrand.value));
   const delay = (milliseconds: number) => new Promise<void>((resolveDelay) => setTimeout(resolveDelay, milliseconds));
@@ -109,6 +121,25 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
     if (action !== 'start' && action !== 'pause' && action !== 'reset') return;
     speedrun.value = { ...speedrun.value, timer: timerAction(speedrun.value.timer, action) };
   });
+  nodecg.listenFor('music:configure', (data) => { if (data && typeof data === 'object') musicManager.configure(data as Partial<MusicState>); });
+  nodecg.listenFor('music:control', (action) => {
+    if (action === 'play') musicManager.play();
+    if (action === 'stop') musicManager.stopPlayback();
+    if (action === 'next') musicManager.next();
+    if (action === 'refresh') void musicManager.refreshLibrary();
+  });
+  nodecg.listenFor('music:status', (data) => { if (data && typeof data === 'object') { const value = data as { status?: MusicState['status']; error?: string }; if (value.status) musicManager.markStatus(value.status, value.error); } });
+  nodecg.listenFor('interstitial:update', (data) => { if (data && typeof data === 'object') interstitial.value = normalizeInterstitial({ ...interstitial.value, ...(data as Partial<InterstitialState>), updatedAt: Date.now() }); });
+  nodecg.listenFor('interstitial:control', (action) => {
+    const enabled = interstitial.value.slides.filter((slide) => slide.enabled);
+    if (!enabled.length) return;
+    const currentId = interstitial.value.slides[interstitial.value.activeIndex]?.id;
+    const currentEnabledIndex = Math.max(0, enabled.findIndex((slide) => slide.id === currentId));
+    const direction = action === 'previous' ? -1 : 1;
+    const selected = enabled[(currentEnabledIndex + direction + enabled.length) % enabled.length];
+    const activeIndex = interstitial.value.slides.findIndex((slide) => slide.id === selected.id);
+    interstitial.value = { ...interstitial.value, activeIndex, updatedAt: Date.now() };
+  });
   nodecg.listenFor('rail:update', (data) => {
     if (!data || typeof data !== 'object') return;
     broadcastRail.value = normalizeBroadcastRail({ ...broadcastRail.value, ...(data as Partial<BroadcastRailState>), updatedAt: Date.now() });
@@ -128,5 +159,14 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
     const current = broadcastRail.value;
     if (!current.visible || !current.automatic || current.held) return;
     if (Date.now() - current.updatedAt >= current.rotationSeconds * 1000) broadcastRail.value = advanceBroadcastRail(current, 1);
+  }, 1000);
+  setInterval(() => {
+    const current = interstitial.value;
+    if (!current.automatic || Date.now() - current.updatedAt < current.rotationSeconds * 1000) return;
+    const enabled = current.slides.filter((slide) => slide.enabled);
+    if (enabled.length < 2) return;
+    const currentId = current.slides[current.activeIndex]?.id;
+    const selected = enabled[(Math.max(0, enabled.findIndex((slide) => slide.id === currentId)) + 1) % enabled.length];
+    interstitial.value = { ...current, activeIndex: current.slides.findIndex((slide) => slide.id === selected.id), updatedAt: Date.now() };
   }, 1000);
 };

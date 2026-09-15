@@ -16,6 +16,8 @@ export default defineConfig(({ command }) => ({
         speedrun: resolve(__dirname, 'pages/graphics/speedrun.html'),
         background: resolve(__dirname, 'pages/graphics/background.html'),
         feedBackgrounds: resolve(__dirname, 'pages/graphics/feed-backgrounds.html'),
+        interstitial: resolve(__dirname, 'pages/graphics/interstitial.html'),
+        musicPlayer: resolve(__dirname, 'pages/graphics/music-player.html'),
         break: resolve(__dirname, 'pages/graphics/break.html'),
         technical: resolve(__dirname, 'pages/graphics/technical.html'),
         lowerThird: resolve(__dirname, 'pages/graphics/lower-third.html'),

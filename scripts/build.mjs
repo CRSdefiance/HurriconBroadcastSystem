@@ -31,6 +31,8 @@ writeFileSync(resolve(out, 'package.json'), JSON.stringify({
       { file: 'speedrun.html', width: 1920, height: 1080, singleInstance: false },
       { file: 'background.html', width: 1920, height: 1080, singleInstance: false },
       { file: 'feed-backgrounds.html', width: 1920, height: 1080, singleInstance: false },
+      { file: 'interstitial.html', width: 1920, height: 1080, singleInstance: false },
+      { file: 'music-player.html', width: 1920, height: 1080, singleInstance: true },
       { file: 'break.html', width: 1920, height: 1080, singleInstance: false },
       { file: 'technical.html', width: 1920, height: 1080, singleInstance: false },
       { file: 'lower-third.html', width: 1920, height: 1080, singleInstance: false },

@@ -5,6 +5,7 @@ import { parseSchedule } from '../src/schedule';
 import { fitRect } from '../src/viewport';
 import { advanceBroadcastRail, availableRailModules, defaultBroadcastRail, normalizeBroadcastRail } from '../src/rail';
 import { defaultTransitionOverlay, defaultTransitionSettings, normalizeTransitionOverlay, normalizeTransitionSettings, transitionHalfMs } from '../src/transition';
+import { normalizeInterstitial, normalizeMusic } from '../src/interstitial';
 
 describe('match operations',()=>{
   it('swaps all player data and scores',()=>{const match=defaultMatch();match.player1={displayName:'Alpha',social:'@a',score:2};match.player2={displayName:'Beta',social:'@b',score:1};const result=swapPlayers(match);expect(result.player1).toEqual({displayName:'Beta',social:'@b',score:1});expect(result.player2.displayName).toBe('Alpha');});
@@ -56,5 +57,17 @@ describe('browser transitions',()=>{
   it('normalizes overlay request and phase values',()=>{
     expect(normalizeTransitionOverlay({requestId:3.9,phase:'covering',style:'iris',durationMs:1,startedAt:-5,error:'  failed  '})).toEqual({requestId:3,phase:'covering',style:'iris',durationMs:400,startedAt:0,error:'failed'});
     expect(normalizeTransitionOverlay({phase:'unknown' as never,style:'obs' as never})).toEqual(defaultTransitionOverlay());
+  });
+});
+describe('interstitial and music state',()=>{
+  it('clamps operator-controlled music settings',()=>{
+    expect(normalizeMusic({source:'local',volume:4,fadeMs:-20,localFolder:'hype'})).toMatchObject({source:'local',volume:1,fadeMs:0,localFolder:'hype',playing:false,status:'stopped'});
+  });
+  it('normalizes slide rotation and limits the slide count',()=>{
+    const slides=Array.from({length:30},(_,index)=>({id:`slide-${index}`,enabled:true,title:`Slide ${index}`}));
+    const state=normalizeInterstitial({rotationSeconds:1,activeIndex:-4,slides});
+    expect(state.rotationSeconds).toBe(3);
+    expect(state.activeIndex).toBe(0);
+    expect(state.slides).toHaveLength(24);
   });
 });

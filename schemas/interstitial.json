@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["automatic", "rotationSeconds", "activeIndex", "slides", "updatedAt"],
+  "properties": {
+    "automatic": { "type": "boolean" },
+    "rotationSeconds": { "type": "number", "minimum": 3, "maximum": 300 },
+    "activeIndex": { "type": "integer", "minimum": 0 },
+    "slides": { "type": "array", "maxItems": 24, "items": { "type": "object", "required": ["id", "enabled", "title"], "properties": { "id": { "type": "string", "maxLength": 120 }, "enabled": { "type": "boolean" }, "kicker": { "type": "string", "maxLength": 100 }, "title": { "type": "string", "maxLength": 180 }, "body": { "type": "string", "maxLength": 500 }, "imageUrl": { "type": "string", "maxLength": 1000 } }, "additionalProperties": false } },
+    "updatedAt": { "type": "number" }
+  },
+  "additionalProperties": false
+}

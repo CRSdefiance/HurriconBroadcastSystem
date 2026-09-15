@@ -12,6 +12,14 @@
         "transitionMap": { "type": "object", "additionalProperties": { "$ref": "#/definitions/transition" } }
       },
       "additionalProperties": false
+    },
+    "music": {
+      "type": "object",
+      "description": "Server-side music library settings.",
+      "properties": {
+        "localRoot": { "type": "string", "description": "Absolute path to a folder containing playlist subfolders, or a path relative to the project root.", "default": "music" }
+      },
+      "additionalProperties": false
     }
   },
   "definitions": {

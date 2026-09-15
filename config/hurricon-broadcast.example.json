@@ -1,4 +1,7 @@
 {
+  "music": {
+    "localRoot": "music"
+  },
   "obs": {
     "url": "ws://127.0.0.1:4455",
     "password": "REPLACE_WITH_YOUR_OBS_WEBSOCKET_PASSWORD",
@@ -11,6 +14,7 @@
       "gameplay": "HBS - Gameplay Show",
       "interview": "HBS - Interview",
       "stage": "HBS - Stage",
+      "interstitial": "HBS - Interstitial",
       "break": "HBS - Break",
       "schedule": "HBS - Schedule",
       "technical": "HBS - Technical"

@@ -10,6 +10,7 @@
 - [ ] Tournament, break, technical, and lower-third graphics tested
 - [ ] Speedrun/gameplay feed count, camera, timer, and source framing tested when used
 - [ ] Global rail safe blank, rotation, donation values, sponsor logos, and next item tested
+- [ ] Interstitial slides, music source, now-playing metadata, and fade controls tested
 - [ ] Stream key/output configured
 - [ ] Local recording enabled if required
 
@@ -28,6 +29,14 @@ Large Show Control buttons update NodeCG state and ask OBS to switch the configu
 Choose the desired transition in **Setup / Preview** before the program. **OBS Fade** is a dependable default. A Stinger can provide a video-based branded wipe when one has been created in OBS; its timing is configured in OBS. HBS also provides asset-free **Corner**, **Diagonal**, and **Iris** transitions through the Transition Overlay Browser Source. Test every destination scene before broadcast.
 
 Fill a lower third, choose its style, then Show/Hide it. Update **Now / up next** before going to break.
+
+## Interstitial and music workflow
+
+Configure the source in **Setup / Preview → Interstitial & music**. Rainwave supplies public game-music stations and live track information; Local reads playlist subfolders from the server machine's `music` directory. Click **Apply music source** after changing the channel, folder, volume, or fade time. Click **Refresh folders & stations** after adding local files.
+
+Slides rotate automatically when enabled and can contain a type label, headline, supporting text, and optional image. Apply edits before they are needed on air. During the show, use the compact Live Control buttons to start or stop music with a fade, advance a local track, or move the information slide manually.
+
+For a normal handoff, start/fade in music before taking **Interstitial**. When returning to gameplay or an interview, stop/fade out music before taking the destination scene. The audio comes from the dedicated `HBS Music Player` OBS Browser source; the visual preview does not play sound. Confirm the music meter in OBS before every take.
 
 ## Broadcast rail workflow
 

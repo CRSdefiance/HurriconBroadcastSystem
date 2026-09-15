@@ -46,7 +46,7 @@ export class ObsConnectionManager {
     }
   }
   async switchScene(mode: ShowMode): Promise<void> {
-    const sceneName = this.config.sceneMap?.[mode];
+    const sceneName = this.sceneFor(mode);
     if (!sceneName) throw new Error(`No OBS scene is configured for ${mode}.`);
     const transition = this.transitionOverride ?? this.config.transitionMap?.[mode] ?? this.config.transition ?? { name: 'Fade', durationMs: 500 };
     let appliedTransition = transition.name;
@@ -61,7 +61,7 @@ export class ObsConnectionManager {
     this.log.info(`Switched OBS to ${sceneName} using ${appliedTransition}.`);
   }
   async cutToScene(mode: ShowMode): Promise<void> {
-    const sceneName = this.config.sceneMap?.[mode];
+    const sceneName = this.sceneFor(mode);
     if (!sceneName) throw new Error(`No OBS scene is configured for ${mode}.`);
     const previous = await this.client.call('GetCurrentSceneTransition');
     try {
@@ -89,5 +89,8 @@ export class ObsConnectionManager {
     const current = await this.client.call('GetCurrentSceneTransition');
     if (!current.transitionFixed && transition.durationMs !== undefined) await this.client.call('SetCurrentSceneTransitionDuration', { transitionDuration: transition.durationMs });
     this.update({ connected: true, currentTransition: current.transitionName, transitionDurationMs: current.transitionFixed ? undefined : transition.durationMs ?? current.transitionDuration, lastError: undefined });
+  }
+  private sceneFor(mode: ShowMode): string | undefined {
+    return this.config.sceneMap?.[mode] ?? (mode === 'interstitial' ? 'HBS - Interstitial' : undefined);
   }
 }

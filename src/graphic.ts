@@ -1,5 +1,6 @@
 import './styles/graphics.css';
 import './styles/identity-transitions.css';
+import './styles/interstitial.css';
 import { applyBrand, assetUrl } from './brand';
 import { mockBrand, mockBroadcastRail, mockCommentators, mockLowerThird, mockMatch, mockShow, mockSpeedrun, mockTransitionOverlay } from './mock';
 import { observe } from './replicant';
@@ -7,10 +8,13 @@ import { speedrunFeedIdentities, timerElapsed } from './domain';
 import { normalizeBroadcastRail } from './rail';
 import { normalizeTransitionOverlay } from './transition';
 import { normalizeSocialHandle, renderSocialIcon } from './social';
-import type { Brand, BroadcastRailState, Commentator, FeedCount, HbsTransitionMode, LowerThirdState, MatchState, PlayerState, ShowState, SpeedrunState, TransitionOverlayState } from './types';
+import { defaultInterstitial, defaultMusic, normalizeInterstitial, normalizeMusic, rainwaveStations } from './interstitial';
+import type { Brand, BroadcastRailState, Commentator, FeedCount, HbsTransitionMode, InterstitialState, LowerThirdState, MatchState, MusicState, PlayerState, ShowState, SpeedrunState, TransitionOverlayState } from './types';
 
 const $ = <T extends HTMLElement>(selector: string): T | null => document.querySelector(selector);
 const text = (selector: string, value: unknown) => { const el = $(selector); if (el) el.textContent = value == null ? '' : String(value); };
+const safeGraphicUrl = (url?: string) => url && (url.startsWith('https://') || url.startsWith('/bundles/')) ? url : '';
+const money = (amount: number, currency: string) => { try { return new Intl.NumberFormat('en-US',{style:'currency',currency:currency||'USD',maximumFractionDigits:amount%1?2:0}).format(amount); } catch { return `${currency||'$'} ${amount.toLocaleString()}`; } };
 const layout = document.body.dataset.layout;
 const previewParams = new URLSearchParams(location.search);
 const compositePreview = previewParams.get('background') === '1' && layout !== 'background' && layout !== 'speedrun-backgrounds';
@@ -69,8 +73,28 @@ const renderPlayerIdentity = (side: 'p1'|'p2', player: PlayerState) => {
 observe<MatchState>('match', mockMatch, (m) => { text('[data-game]',m.game);text('[data-round]',m.round);text('[data-status]',m.status);renderPlayerIdentity('p1',m.player1);renderPlayerIdentity('p2',m.player2);text('[data-p1-score]',m.player1.score);text('[data-p2-score]',m.player2.score);text('[data-best]',m.bestOf ? `BEST OF ${m.bestOf}` : ''); });
 observe<Commentator[]>('commentators', mockCommentators, (list) => text('[data-commentators]',list.length ? `Commentary: ${list.map((c)=>c.name).join(' · ')}` : ''));
 observe<ShowState>('show', mockShow, (s) => { text('[data-current]',s.currentSegment || (layout === 'break' ? 'Intermission' : 'Live show'));text('[data-next]',s.nextSegment || 'More programming soon');text('[data-next-time]',s.nextSegmentTime || ''); });
+observe<InterstitialState>('interstitial', defaultInterstitial(), (raw) => {
+  if (layout !== 'interstitial') return;
+  const state = normalizeInterstitial(raw); const slide = state.slides[state.activeIndex] ?? state.slides.find((item) => item.enabled);
+  text('[data-slide-kicker]', slide?.kicker || 'Hurricon event information'); text('[data-slide-title]', slide?.title || 'Programming resumes shortly'); text('[data-slide-body]', slide?.body || 'Stay tuned.');
+  const image = $<HTMLElement>('[data-slide-image]'); const url = safeGraphicUrl(slide?.imageUrl); if (image) { image.style.backgroundImage = url ? `url("${url}")` : ''; image.classList.toggle('has-image', Boolean(url)); }
+  const feature = $('[data-interstitial-feature]'); feature?.classList.remove('changing'); if (feature) { void feature.offsetWidth; feature.classList.add('changing'); }
+});
+observe<MusicState>('music', defaultMusic(), (raw) => {
+  if (layout !== 'interstitial') return;
+  const music = normalizeMusic(raw); const station = rainwaveStations.find((item) => item.key === music.rainwaveStation);
+  text('[data-music-source]', music.source === 'rainwave' ? `Rainwave · ${station?.name ?? music.rainwaveStation}` : `Local · ${music.localFolder}`);
+  text('[data-music-title]', music.trackTitle || (music.playing ? 'Loading music…' : 'Music paused')); text('[data-music-detail]', [music.artist, music.album].filter(Boolean).join(' · ')); text('[data-music-state]', music.playing ? music.status : 'Paused');
+  const state = $('[data-music-state]'); state?.classList.toggle('paused', !music.playing); const artwork = $<HTMLImageElement>('[data-music-artwork]'); if (artwork) { artwork.onerror = () => artwork.removeAttribute('src'); const src = safeGraphicUrl(music.artworkUrl); if (src) artwork.src = src; else artwork.removeAttribute('src'); }
+});
+observe<BroadcastRailState>('broadcastRail', mockBroadcastRail, (raw) => {
+  if (layout !== 'interstitial') return;
+  const rail = normalizeBroadcastRail(raw); text('[data-interstitial-donation]', money(rail.donation.total, rail.donation.currency)); text('[data-interstitial-goal]', rail.donation.goal > 0 ? `raised toward ${money(rail.donation.goal, rail.donation.currency)}` : 'raised');
+  const progress = $<HTMLElement>('[data-interstitial-progress]'); if (progress) progress.style.width = `${rail.donation.goal > 0 ? Math.min(100, rail.donation.total / rail.donation.goal * 100) : 0}%`;
+  const sponsors = rail.sponsors.filter((sponsor) => sponsor.enabled); const sponsor = sponsors.length ? sponsors[rail.sponsorIndex % sponsors.length] : undefined; text('[data-interstitial-sponsor]', sponsor?.name || 'Hurricon community partners');
+  const logo = $<HTMLImageElement>('[data-interstitial-sponsor-logo]'); if (logo) { logo.onerror = () => logo.removeAttribute('src'); const src = safeGraphicUrl(sponsor?.logoUrl); if (src) logo.src = src; else logo.removeAttribute('src'); }
+});
 observe<LowerThirdState>('lowerThird', mockLowerThird, (lower) => { const card = $('[data-lower-card]'); card?.classList.toggle('visible', lower.visible);text('[data-lower-title]',lower.title);text('[data-lower-subtitle]',lower.subtitle);text('[data-lower-tertiary]',lower.tertiary); });
-const money = (amount: number, currency: string) => { try { return new Intl.NumberFormat('en-US',{style:'currency',currency:currency||'USD',maximumFractionDigits:amount%1?2:0}).format(amount); } catch { return `${currency||'$'} ${amount.toLocaleString()}`; } };
 const safeSponsorLogo = (url?: string) => url && (url.startsWith('https://') || url.startsWith('/bundles/')) ? url : '';
 observe<BroadcastRailState>('broadcastRail', mockBroadcastRail, (raw) => {
   if (layout !== 'broadcast-rail') return;

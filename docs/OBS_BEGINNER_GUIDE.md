@@ -63,11 +63,12 @@ The example configuration expects these exact OBS scene names:
 | Speedrun / Gameplay | `HBS - Gameplay Show` |
 | Interview / Exhibition | `HBS - Interview` |
 | Stage / Panel | `HBS - Stage` |
+| Interstitial | `HBS - Interstitial` |
 | Break | `HBS - Break` |
 | Schedule | `HBS - Schedule` |
 | Technical difficulties | `HBS - Technical` |
 
-To create one, click the **+** button in the Scenes dock, type the name exactly, and click **OK**. Create all seven now, even if you only need one today. The Live Control buttons use these names from `sceneMap`.
+To create one, click the **+** button in the Scenes dock, type the name exactly, and click **OK**. Create all eight now, even if you only need one today. The Live Control buttons use these names from `sceneMap`. If your existing private config does not contain an `interstitial` entry, HBS uses `HBS - Interstitial` as its safe default.
 
 ## 5. Add the reusable global layers
 
@@ -88,6 +89,17 @@ Create another scene named **HBS - Transition Overlay**. Add a **Browser** sourc
 - Refresh browser when scene becomes active: **off**
 
 Keeping both browser sources loaded is important. It prevents a blank frame while OBS changes scenes.
+
+Create a third reusable scene named **HBS - Music Audio**. Add a Browser source named `HBS Music Player` with:
+
+- URL: `http://127.0.0.1:9090/bundles/hurricon-broadcast/graphics/music-player.html?output=1`
+- Width: `1920`
+- Height: `1080`
+- Control audio via OBS: **on**
+- Shutdown source when not visible: **off**
+- Refresh browser when scene becomes active: **off**
+
+The page is intentionally visually blank; it is the single audio player controlled by HBS. The `?output=1` part is required. Add **HBS - Music Audio** as a nested Scene source to every OBS scene across which music may continue. Reusing one source prevents a second copy of the stream from playing and allows the fade to continue while scenes change.
 
 ## 6. Build the tournament scene
 
@@ -176,7 +188,30 @@ The global rail is controlled from HBS Setup and Live Control. It can show:
 
 Add sponsors and donation information in Setup, click **Apply rail content**, then use **Show rail**, **Safe blank**, or the module buttons in Live Control during the broadcast.
 
-## 11. Enable transitions
+## 11. Build the interstitial scene
+
+Select `HBS - Interstitial` and add these sources from top to bottom:
+
+1. **HBS - Transition Overlay**
+2. **HBS Interstitial** — Browser source URL:
+   `http://127.0.0.1:9090/bundles/hurricon-broadcast/graphics/interstitial.html`
+3. **HBS - Music Audio**
+4. An optional branded background if you want one behind the interstitial
+
+Set `HBS Interstitial` to 1920×1080, keep both browser reload checkboxes off, and leave `HBS - Music Audio` visually behind the graphic. The interstitial includes the rotating event slide, upcoming programming, donation progress, sponsor rotation, and the current music title/artist at the bottom.
+
+In **HBS Setup / Preview → Interstitial & music**:
+
+1. Choose **Rainwave** or **Local folder**.
+2. For Rainwave, choose a channel such as All, Game, OC ReMix, Covers, Chiptunes, or Chill. Public playback and now-playing metadata do not require an API key.
+3. For local music, place audio in a subfolder under the project `music` folder, such as `music/hype` or `music/chill`, then click **Refresh folders & stations**. The filename format `Artist - Track Title.mp3` produces cleaner on-screen metadata.
+4. Set the volume and fade time, then click **Apply music source**.
+5. Add, remove, or edit the event slides and click **Apply interstitial**.
+6. Open the **Interstitial** preview link to proof the layout. This preview shows metadata but does not play audio.
+
+During the show, the operator uses **Start / fade in**, **Stop / fade out**, **Next track**, and the slide controls in Live Control. A safe change from a live feed is: start music, wait for the fade, then take **Interstitial**. To return live: stop music, wait for the fade, then take the live scene. Keep an eye on the `HBS Music Player` channel in the OBS Audio Mixer just as you would any other input.
+
+## 12. Enable transitions
 
 The simplest option is OBS **Fade**:
 
@@ -196,7 +231,7 @@ HBS covers the screen, performs a hidden OBS scene cut at the midpoint, and reve
 
 You can also create a video-based OBS Stinger from **Scene Transitions → + → Stinger**. After creating it, select its name in HBS Setup when OBS is connected.
 
-## 12. Test before streaming
+## 13. Test before streaming
 
 Use this order for a rehearsal:
 
@@ -207,9 +242,11 @@ Use this order for a rehearsal:
 5. Apply a tournament layout and verify names, scores, socials, and the lower third.
 6. Apply a one-to-four-feed speedrun layout and verify each capture, camera, timer, and runner rail.
 7. Press **Show rail** and test donation, sponsor, announcement, and programming modules.
-8. Take every scene from Live Control and confirm OBS changes scenes.
-9. Test the selected transition in both directions.
-10. Start a local OBS recording and watch it back before starting the livestream.
+8. Configure Rainwave, start music, and confirm the title and artist change in the interstitial and the `HBS Music Player` meter moves in OBS.
+9. Test a local playlist folder, Next track, and both fade directions.
+10. Take every scene from Live Control and confirm OBS changes scenes.
+11. Test the selected transition in both directions.
+12. Start a local OBS recording and watch it back before starting the livestream.
 
 The browser proof is useful for checking HBS data and layering, but it contains branded placeholders instead of real OBS captures. The OBS preview and a short recording are the final authority for video framing, audio, and transitions.
 
@@ -232,3 +269,7 @@ The browser proof is useful for checking HBS data and layering, but it contains 
 **Scene button does not switch OBS:** The scene name in OBS must exactly match the `sceneMap` name, including capitalization, spaces, and punctuation.
 
 **Audio is delayed or doubled:** Monitor audio through one path only. Avoid monitoring the same microphone in both OBS and an external application unless you intentionally need both.
+
+**Music metadata appears but there is no sound:** Confirm the Browser source URL ends in `?output=1`, **Control audio via OBS** is enabled, its mixer channel is not muted, and its volume fader is up. The ordinary interstitial preview deliberately does not output audio.
+
+**Local playlist is empty:** Put supported audio files (`.mp3`, `.ogg`, `.wav`, `.flac`, `.m4a`, `.aac`, or `.opus`) inside a direct subfolder of `music`, then click **Refresh folders & stations**. Loose files directly inside `music` are not treated as a playlist.
