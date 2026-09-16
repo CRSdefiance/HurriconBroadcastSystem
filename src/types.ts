@@ -21,7 +21,7 @@ export interface TransitionOverlayState { requestId: number; phase: TransitionPh
 export type MusicSource = 'rainwave' | 'local';
 export type MusicStatus = 'stopped' | 'loading' | 'playing' | 'error';
 export interface RainwaveStation { id: number; key: string; name: string; description?: string }
-export interface MusicState { source: MusicSource; rainwaveStation: string; localFolder: string; volume: number; fadeMs: number; playing: boolean; status: MusicStatus; streamUrl?: string; trackTitle?: string; artist?: string; album?: string; artworkUrl?: string; trackKey?: string; error?: string; updatedAt: number }
+export interface MusicState { source: MusicSource; rainwaveStation: string; localFolder: string; volume: number; fadeMs: number; autoWithInterstitial: boolean; playing: boolean; status: MusicStatus; streamUrl?: string; trackTitle?: string; artist?: string; album?: string; artworkUrl?: string; trackKey?: string; error?: string; updatedAt: number }
 export interface MusicLibraryState { folders: string[]; stations: RainwaveStation[]; error?: string }
 export interface InterstitialSlide { id: string; enabled: boolean; kicker?: string; title: string; body?: string; imageUrl?: string }
 export interface InterstitialState { automatic: boolean; rotationSeconds: number; activeIndex: number; slides: InterstitialSlide[]; updatedAt: number }

@@ -9,6 +9,7 @@ import { advanceBroadcastRail, normalizeBroadcastRail } from './rail';
 import { normalizeTransitionSettings } from './transition';
 import { socialPlatforms } from './social';
 import { defaultInterstitial, defaultMusic, normalizeInterstitial, normalizeMusic, rainwaveStations } from './interstitial';
+import { normalizePanelLayoutPreferences, type DashboardPanel, type PanelLayoutPreferences } from './layout-preferences';
 import type { Brand, BroadcastRailState, FeedCount, FeedIdentity, HbsTransitionMode, InterstitialSlide, InterstitialState, LowerThirdState, MatchState, MusicLibraryState, MusicSource, MusicState, ObsState, RailModule, ShowMode, ShowState, SocialPlatform, SpeedrunState, SponsorItem, TransitionOverlayState, TransitionSettings } from './types';
 
 const $ = <T extends HTMLElement>(selector:string) => document.querySelector<T>(selector);
@@ -169,7 +170,7 @@ if (sceneGrid) sceneGrid.closest('.card')?.after(liveMusicCard);
 
 const setupInterstitialCard = document.createElement('section');
 setupInterstitialCard.className = 'card interstitial-setup-card';
-setupInterstitialCard.innerHTML = '<span class="eyebrow">Between-show programming</span><h2>Interstitial &amp; music</h2><p class="hint">Configure Rainwave or server-local playlist folders, fade behavior, and the rotating information shown while gameplay is off screen.</p><div class="three"><label>Music source<select data-music-setting="source"><option value="rainwave">Rainwave</option><option value="local">Local folder</option></select></label><label data-rainwave-setting>Rainwave channel<select data-music-setting="rainwaveStation"></select></label><label data-local-setting>Playlist folder<select data-music-setting="localFolder"></select></label></div><div class="two"><label>Volume (0–100)<input data-music-setting="volume" type="number" min="0" max="100" step="1"></label><label>Fade in/out (ms)<input data-music-setting="fadeMs" type="number" min="0" max="10000" step="100"></label></div><div class="actions"><button data-action="refresh-music">Refresh folders &amp; stations</button><button class="primary" data-action="apply-music">Apply music source</button></div><p class="message" data-music-setup-message></p><hr><div class="section-head"><div><span class="eyebrow">Interstitial rotation</span><h3>Slides</h3></div><button data-action="add-interstitial-slide">Add slide</button></div><div class="two"><label class="check"><input type="checkbox" data-interstitial-setting="automatic"> Automatic rotation</label><label>Seconds per slide<input data-interstitial-setting="rotationSeconds" type="number" min="3" max="300"></label></div><div class="interstitial-slide-grid" data-interstitial-slides></div><div class="actions"><button class="primary" data-action="apply-interstitial">Apply interstitial</button></div><p class="hint">Images may use HTTPS URLs or bundle paths. Leave the image blank for a branded text slide.</p>';
+setupInterstitialCard.innerHTML = '<span class="eyebrow">Between-show programming</span><h2>Interstitial &amp; music</h2><p class="hint">Configure Rainwave or server-local playlist folders, fade behavior, and the rotating information shown while gameplay is off screen.</p><div class="three"><label>Music source<select data-music-setting="source"><option value="rainwave">Rainwave</option><option value="local">Local folder</option></select></label><label data-rainwave-setting>Rainwave channel<select data-music-setting="rainwaveStation"></select></label><label data-local-setting>Playlist folder<select data-music-setting="localFolder"></select></label></div><div class="two"><label>Volume (0–100)<input data-music-setting="volume" type="number" min="0" max="100" step="1"></label><label>Scene-change fade (ms)<input data-music-setting="fadeMs" type="number" min="0" max="10000" step="100"></label></div><label class="check"><input type="checkbox" data-music-setting="autoWithInterstitial"> Automatically fade music in when taking Interstitial and out when leaving</label><div class="actions"><button data-action="refresh-music">Refresh folders &amp; stations</button><button class="primary" data-action="apply-music">Apply music source</button></div><p class="message" data-music-setup-message></p><hr><div class="section-head"><div><span class="eyebrow">Interstitial rotation</span><h3>Slides</h3></div><button data-action="add-interstitial-slide">Add slide</button></div><div class="two"><label class="check"><input type="checkbox" data-interstitial-setting="automatic"> Automatic rotation</label><label>Seconds per slide<input data-interstitial-setting="rotationSeconds" type="number" min="3" max="300"></label></div><div class="interstitial-slide-grid" data-interstitial-slides></div><div class="actions"><button class="primary" data-action="apply-interstitial">Apply interstitial</button></div><p class="hint">Images may use HTTPS URLs or bundle paths. Leave the image blank for a branded text slide.</p>';
 if ($('[data-brand-select]')) $('main.dashboard')?.append(setupInterstitialCard);
 const previewLinks = $('.preview-links');
 if (previewLinks) { const interstitialLink = document.createElement('a'); interstitialLink.href = '../graphics/interstitial.html?background=1'; interstitialLink.target = '_blank'; interstitialLink.textContent = 'Interstitial'; previewLinks.append(interstitialLink); }
@@ -184,7 +185,7 @@ const renderInterstitialEditors = (slides: InterstitialSlide[]) => {
 
 let musicState = defaultMusic();
 const musicRep = observe<MusicState>('music', defaultMusic(), (raw) => {
-  musicState = normalizeMusic(raw); all<HTMLInputElement|HTMLSelectElement>('[data-music-setting]').forEach((field) => { if (document.activeElement === field) return; const key = field.dataset.musicSetting as keyof MusicState; field.value = key === 'volume' ? String(Math.round(musicState.volume * 100)) : String(musicState[key] ?? ''); });
+  musicState = normalizeMusic(raw); all<HTMLInputElement|HTMLSelectElement>('[data-music-setting]').forEach((field) => { if (document.activeElement === field) return; const key = field.dataset.musicSetting as keyof MusicState; if (field instanceof HTMLInputElement && field.type === 'checkbox') field.checked = Boolean(musicState[key]); else field.value = key === 'volume' ? String(Math.round(musicState.volume * 100)) : String(musicState[key] ?? ''); });
   setText('[data-live-music-source]', musicState.source === 'rainwave' ? `Rainwave · ${musicState.rainwaveStation}` : `Local · ${musicState.localFolder}`); setText('[data-live-music-status]', musicState.playing ? musicState.status : 'stopped'); setText('[data-live-music-title]', musicState.trackTitle || 'Nothing playing'); setText('[data-live-music-detail]', [musicState.artist,musicState.album].filter(Boolean).join(' · ')); setText('[data-live-music-error]', musicState.error); setText('[data-music-setup-message]', musicState.error);
 });
 observe<MusicLibraryState>('musicLibrary', { folders: [], stations: rainwaveStations }, (library) => {
@@ -197,8 +198,74 @@ const updateMusicVisibility = () => { const source = value('[data-music-setting=
 $('[data-music-setting="source"]')?.addEventListener('change', updateMusicVisibility); updateMusicVisibility();
 all<HTMLButtonElement>('[data-music-action]').forEach((button) => button.addEventListener('click', () => { const action = button.dataset.musicAction; if (window.nodecg) void window.nodecg.sendMessage('music:control', action); else musicRep.set({ ...musicState, playing: action === 'play' ? true : action === 'stop' ? false : musicState.playing, updatedAt: Date.now() }); }));
 $('[data-action="refresh-music"]')?.addEventListener('click', () => { if (window.nodecg) void window.nodecg.sendMessage('music:control', 'refresh'); toast('Music library refreshed'); });
-$('[data-action="apply-music"]')?.addEventListener('click', () => { const next: Partial<MusicState> = { source: value('[data-music-setting="source"]') as MusicSource, rainwaveStation: value('[data-music-setting="rainwaveStation"]'), localFolder: value('[data-music-setting="localFolder"]'), volume: (Number(value('[data-music-setting="volume"]')) || 0) / 100, fadeMs: Number(value('[data-music-setting="fadeMs"]')) || 0 }; if (window.nodecg) void window.nodecg.sendMessage('music:configure', next); else musicRep.set(normalizeMusic({ ...musicState, ...next })); toast('Music source applied'); });
+$('[data-action="apply-music"]')?.addEventListener('click', () => { const next: Partial<MusicState> = { source: value('[data-music-setting="source"]') as MusicSource, rainwaveStation: value('[data-music-setting="rainwaveStation"]'), localFolder: value('[data-music-setting="localFolder"]'), volume: (Number(value('[data-music-setting="volume"]')) || 0) / 100, fadeMs: Number(value('[data-music-setting="fadeMs"]')) || 0, autoWithInterstitial: $<HTMLInputElement>('[data-music-setting="autoWithInterstitial"]')?.checked ?? true }; if (window.nodecg) void window.nodecg.sendMessage('music:configure', next); else musicRep.set(normalizeMusic({ ...musicState, ...next })); toast('Music source applied'); });
 all<HTMLButtonElement>('[data-interstitial-action]').forEach((button) => button.addEventListener('click', () => { if (window.nodecg) void window.nodecg.sendMessage('interstitial:control', button.dataset.interstitialAction); }));
 $('[data-action="add-interstitial-slide"]')?.addEventListener('click', () => { if (interstitialDraft.length >= 24) return toast('Slide limit is 24'); interstitialDraft.push({ id: `slide-${Date.now()}`, enabled: true, title: 'New event message' }); renderInterstitialEditors(interstitialDraft); });
 document.addEventListener('click', (event) => { const remove = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-remove-interstitial-slide]'); if (!remove) return; interstitialDraft.splice(Number(remove.dataset.removeInterstitialSlide), 1); renderInterstitialEditors(interstitialDraft); });
 $('[data-action="apply-interstitial"]')?.addEventListener('click', () => { const slides = all<HTMLElement>('[data-interstitial-slide]').map((panel, index) => { const field = (name:string) => (panel.querySelector<HTMLInputElement|HTMLTextAreaElement>(`[data-slide-field="${name}"]`)?.value ?? '').trim(); return { id: interstitialDraft[index]?.id || `slide-${index + 1}`, enabled: panel.querySelector<HTMLInputElement>('[data-slide-field="enabled"]')?.checked ?? true, kicker: field('kicker'), title: field('title'), body: field('body'), imageUrl: field('imageUrl') || undefined }; }).filter((slide) => slide.title); const next = normalizeInterstitial({ ...interstitialState, automatic: $<HTMLInputElement>('[data-interstitial-setting="automatic"]')?.checked ?? true, rotationSeconds: Number(value('[data-interstitial-setting="rotationSeconds"]')) || 12, slides, updatedAt: Date.now() }); if (window.nodecg) void window.nodecg.sendMessage('interstitial:update', next); else interstitialRep.set(next); toast('Interstitial applied'); });
+
+// Operator layout preferences are browser-local by default and can be moved
+// between workstations with a small JSON file. Only presentation order and
+// collapsed state are included; no match, sponsor, or credential data leaves.
+const installLayoutEditor = () => {
+  const dashboard = document.querySelector<HTMLElement>('main.dashboard');
+  if (!dashboard) return;
+  const panel: DashboardPanel = dashboard.classList.contains('live-dashboard') ? 'live' : 'setup';
+  const storageKey = `hbs-panel-layout-v1:${panel}`;
+  const cards = () => Array.from(dashboard.querySelectorAll<HTMLElement>(':scope > .card'));
+  const idFor = (card: HTMLElement, index: number) => {
+    if (card.dataset.layoutId) return card.dataset.layoutId;
+    const label = [card.querySelector('.eyebrow')?.textContent, card.querySelector('h2')?.textContent].filter(Boolean).join('-').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    card.dataset.layoutId = label || `panel-${index + 1}`;
+    return card.dataset.layoutId;
+  };
+  cards().forEach(idFor);
+  const knownIds = () => cards().map((card, index) => idFor(card, index));
+  const current = (): PanelLayoutPreferences => ({ version: 1, panel, order: knownIds(), collapsed: cards().filter((card) => card.classList.contains('layout-collapsed')).map((card, index) => idFor(card, index)) });
+  const persist = () => { try { localStorage.setItem(storageKey, JSON.stringify(current())); } catch { toast('This browser could not save the panel layout'); } };
+  const apply = (preferences: PanelLayoutPreferences) => {
+    const byId = new Map(cards().map((card, index) => [idFor(card, index), card]));
+    preferences.order.forEach((id) => { const card = byId.get(id); if (card) dashboard.append(card); });
+    cards().forEach((card, index) => card.classList.toggle('layout-collapsed', preferences.collapsed.includes(idFor(card, index))));
+  };
+  try { const saved = localStorage.getItem(storageKey); if (saved) { const normalized = normalizePanelLayoutPreferences(JSON.parse(saved), panel, knownIds()); if (normalized) apply(normalized); } } catch { localStorage.removeItem(storageKey); }
+
+  const toolbar = document.createElement('aside');
+  toolbar.className = 'layout-toolbar';
+  toolbar.innerHTML = `<div><strong>Panel layout</strong><span>Saved automatically on this browser</span></div><div class="layout-toolbar-actions"><button data-layout-edit>Reorganize</button><button data-layout-export>Save layout file</button><button data-layout-import>Load layout file</button><button data-layout-reset>Reset</button><input data-layout-file type="file" accept="application/json,.json" hidden></div>`;
+  dashboard.before(toolbar);
+  let editing = false;
+  let dragged: HTMLElement | null = null;
+  const setEditing = (next: boolean) => {
+    editing = next; dashboard.classList.toggle('layout-editing', editing);
+    toolbar.querySelector<HTMLButtonElement>('[data-layout-edit]')!.textContent = editing ? 'Done reorganizing' : 'Reorganize';
+    cards().forEach((card) => { card.draggable = false; });
+  };
+  const move = (card: HTMLElement, direction: -1 | 1) => {
+    const siblings = cards(); const index = siblings.indexOf(card); const destination = siblings[index + direction];
+    if (!destination) return;
+    if (direction < 0) dashboard.insertBefore(card, destination); else dashboard.insertBefore(destination, card);
+    persist(); card.querySelector<HTMLButtonElement>('.layout-drag-handle')?.focus();
+  };
+  cards().forEach((card) => {
+    const controls = document.createElement('div'); controls.className = 'layout-card-tools';
+    controls.innerHTML = '<button class="layout-drag-handle" draggable="true" title="Drag to reposition" aria-label="Drag panel to reposition">⠿ Drag</button><button data-layout-up title="Move up" aria-label="Move panel up">↑</button><button data-layout-down title="Move down" aria-label="Move panel down">↓</button><button data-layout-collapse>Collapse</button>';
+    card.prepend(controls);
+    const handle = controls.querySelector<HTMLButtonElement>('.layout-drag-handle')!;
+    handle.addEventListener('dragstart', (event) => { if (!editing) { event.preventDefault(); return; } dragged = card; card.classList.add('layout-dragging'); event.dataTransfer?.setData('text/plain', card.dataset.layoutId || 'panel'); if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'; });
+    handle.addEventListener('dragend', () => { dragged = null; card.classList.remove('layout-dragging'); cards().forEach((item) => item.classList.remove('layout-drop-target')); persist(); });
+    card.addEventListener('dragover', (event) => { if (!editing || !dragged || dragged === card) return; event.preventDefault(); card.classList.add('layout-drop-target'); const after = event.clientY > card.getBoundingClientRect().top + card.offsetHeight / 2; dashboard.insertBefore(dragged, after ? card.nextSibling : card); });
+    card.addEventListener('dragleave', () => card.classList.remove('layout-drop-target'));
+    controls.querySelector('[data-layout-up]')?.addEventListener('click', () => move(card, -1));
+    controls.querySelector('[data-layout-down]')?.addEventListener('click', () => move(card, 1));
+    controls.querySelector<HTMLButtonElement>('[data-layout-collapse]')?.addEventListener('click', (event) => { card.classList.toggle('layout-collapsed'); (event.currentTarget as HTMLButtonElement).textContent = card.classList.contains('layout-collapsed') ? 'Expand' : 'Collapse'; persist(); });
+  });
+  cards().forEach((card) => { const button = card.querySelector<HTMLButtonElement>('[data-layout-collapse]'); if (button) button.textContent = card.classList.contains('layout-collapsed') ? 'Expand' : 'Collapse'; });
+  toolbar.querySelector('[data-layout-edit]')?.addEventListener('click', () => setEditing(!editing));
+  toolbar.querySelector('[data-layout-export]')?.addEventListener('click', () => { const blob = new Blob([JSON.stringify(current(), null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `hbs-${panel}-panel-layout.json`; link.click(); URL.revokeObjectURL(link.href); toast('Panel layout saved to file'); });
+  const file = toolbar.querySelector<HTMLInputElement>('[data-layout-file]')!;
+  toolbar.querySelector('[data-layout-import]')?.addEventListener('click', () => file.click());
+  file.addEventListener('change', async () => { const selected = file.files?.[0]; if (!selected) return; try { const normalized = normalizePanelLayoutPreferences(JSON.parse(await selected.text()), panel, knownIds()); if (!normalized) throw new Error(`This is not an HBS ${panel} panel layout file.`); apply(normalized); persist(); cards().forEach((card) => { const button = card.querySelector<HTMLButtonElement>('[data-layout-collapse]'); if (button) button.textContent = card.classList.contains('layout-collapsed') ? 'Expand' : 'Collapse'; }); toast('Panel layout loaded'); } catch (error) { toast(error instanceof Error ? error.message : 'Could not load layout'); } finally { file.value = ''; } });
+  toolbar.querySelector('[data-layout-reset]')?.addEventListener('click', () => { localStorage.removeItem(storageKey); location.reload(); });
+};
+installLayoutEditor();

@@ -3,7 +3,7 @@ import type NodeCG from 'nodecg/types';
 import { defaultMatch, defaultSpeedrun, speedrunFeedIdentities, timerAction } from '../src/domain';
 import { advanceBroadcastRail, defaultBroadcastRail, normalizeBroadcastRail } from '../src/rail';
 import { defaultTransitionOverlay, defaultTransitionSettings, normalizeTransitionSettings, transitionHalfMs } from '../src/transition';
-import { defaultInterstitial, defaultMusic, normalizeInterstitial, normalizeMusic, rainwaveStations } from '../src/interstitial';
+import { automaticMusicAction, defaultInterstitial, defaultMusic, normalizeInterstitial, normalizeMusic, rainwaveStations } from '../src/interstitial';
 import type { Brand, BroadcastRailState, Commentator, InterstitialState, LowerThirdState, MatchState, MusicLibraryState, MusicState, ObsState, RailModule, ShowMode, ShowState, SpeedrunState, TransitionOverlayState, TransitionSettings } from '../src/types';
 import { listBrandIds, loadBrand } from './branding';
 import { MusicManager } from './music/MusicManager';
@@ -73,10 +73,19 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
   nodecg.listenFor('brand:set', (id) => { if (typeof id === 'string') applyBrand(id); });
   nodecg.listenFor('brand:reload', () => applyBrand(activeBrand.value));
   const delay = (milliseconds: number) => new Promise<void>((resolveDelay) => setTimeout(resolveDelay, milliseconds));
+  const startMusic = async (): Promise<void> => {
+    try { await controller.ensureMusicSource(); }
+    catch (error) { nodecg.log.warn(`Could not prepare OBS music source: ${error instanceof Error ? error.message : String(error)}`); }
+    musicManager.play();
+  };
   let sceneRequestId = 0;
   nodecg.listenFor('show:setMode', async (mode) => {
     if (typeof mode !== 'string') return;
+    const previousMode = show.value.mode;
     show.value = { ...show.value, mode: mode as ShowMode };
+    const musicAction = automaticMusicAction(previousMode, mode as ShowMode, normalizeMusic(music.value));
+    if (musicAction === 'play') void startMusic();
+    if (musicAction === 'stop') musicManager.stopPlayback();
     const requestId = ++sceneRequestId;
     const settings = normalizeTransitionSettings(transitionSettings.value);
     if (settings.mode === 'obs') {
@@ -125,9 +134,7 @@ export = (nodecg: NodeCG.ServerAPI<Config>) => {
   nodecg.listenFor('music:configure', (data) => { if (data && typeof data === 'object') musicManager.configure(data as Partial<MusicState>); });
   nodecg.listenFor('music:control', async (action) => {
     if (action === 'play') {
-      try { await controller.ensureMusicSource(); }
-      catch (error) { nodecg.log.warn(`Could not prepare OBS music source: ${error instanceof Error ? error.message : String(error)}`); }
-      musicManager.play();
+      await startMusic();
     }
     if (action === 'stop') musicManager.stopPlayback();
     if (action === 'next') musicManager.next();

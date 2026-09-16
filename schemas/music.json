@@ -1,13 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["source", "rainwaveStation", "localFolder", "volume", "fadeMs", "playing", "status", "updatedAt"],
+  "required": ["source", "rainwaveStation", "localFolder", "volume", "fadeMs", "autoWithInterstitial", "playing", "status", "updatedAt"],
   "properties": {
     "source": { "enum": ["rainwave", "local"] },
     "rainwaveStation": { "type": "string", "maxLength": 40 },
     "localFolder": { "type": "string", "maxLength": 120 },
     "volume": { "type": "number", "minimum": 0, "maximum": 1 },
     "fadeMs": { "type": "number", "minimum": 0, "maximum": 10000 },
+    "autoWithInterstitial": { "type": "boolean" },
     "playing": { "type": "boolean" },
     "status": { "enum": ["stopped", "loading", "playing", "error"] },
     "streamUrl": { "type": "string", "maxLength": 1000 },

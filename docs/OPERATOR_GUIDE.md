@@ -18,6 +18,8 @@
 
 NodeCG now exposes two focused panels. **HBS Live Control** contains only frequent on-air actions: scene takes, scores, match status, the run timer, broadcast-rail transport, lower-third visibility, and program summaries. **HBS Setup / Preview** contains text entry, feed layouts, runner identities, donation/sponsor content, branding, transitions, and preview links. Prepare and proof content in Setup, then operate primarily from Live Control.
 
+Each panel has a **Panel layout** bar. Choose **Reorganize**, then drag cards by their handles or use the arrow buttons for keyboard-friendly movement. Cards can also be collapsed. The arrangement saves automatically in that browser. **Save layout file** exports only card order and collapsed state; **Load layout file** transfers those preferences to another workstation. Live and Setup layouts are intentionally separate, and layout files contain no match data, sponsor content, credentials, or OBS configuration.
+
 Use **Open full Program Preview** in Setup / Preview to proof the entire 1920×1080 composition in an ordinary browser. It layers the active tournament, speedrun, interview, break, or technical layout with its scene/feed backgrounds, lower third, global rail, sponsor rotation, and transition overlay. The default URL follows the mode selected in Live Control; the fixed Tournament and Speedrun links are useful while preparing a scene that is not currently live. Capture inputs are represented by branded placeholders because only OBS can composite the real cameras and gameplay feeds.
 
 Always operate Setup through `http://127.0.0.1:9090/dashboard/`. Opening the dashboard panel's HTML file directly is only a disconnected development fallback, so its fields use sample values and cannot change live NodeCG state.
@@ -32,11 +34,11 @@ Fill a lower third, choose its style, then Show/Hide it. Update **Now / up next*
 
 ## Interstitial and music workflow
 
-Configure the source in **Setup / Preview → Interstitial & music**. Rainwave supplies public game-music stations and live track information; Local reads playlist subfolders from the server machine's `music` directory. Click **Apply music source** after changing the channel, folder, volume, or fade time. Click **Refresh folders & stations** after adding local files.
+Configure the source in **Setup / Preview → Interstitial & music**. Rainwave supplies public game-music stations and live track information; Local reads playlist subfolders from the server machine's `music` directory. Set **Scene-change fade** to the desired fade time (0–10,000 ms). Leave **Automatically fade music...** checked to start/fade in when Interstitial is taken and stop/fade out when another scene is taken. Uncheck it for fully manual transport control. Click **Apply music source** after changing these settings. Click **Refresh folders & stations** after adding local files.
 
 Slides rotate automatically when enabled and can contain a type label, headline, supporting text, and optional image. Apply edits before they are needed on air. During the show, use the compact Live Control buttons to start or stop music with a fade, advance a local track, or move the information slide manually.
 
-For a normal handoff, start/fade in music before taking **Interstitial**. When returning to gameplay or an interview, stop/fade out music before taking the destination scene. The audio comes from the dedicated `HBS Music Player` OBS Browser source; the visual preview does not play sound. Confirm the music meter in OBS before every take.
+With automatic scene fading enabled, taking **Interstitial** starts the music fade and taking gameplay, tournament, interview, or another destination starts the fade out. The manual Start and Stop buttons remain available for overrides. The audio comes from the dedicated `HBS Music Player` OBS Browser source; the visual preview does not play sound. Confirm the music meter in OBS before every take.
 
 ## Broadcast rail workflow
 

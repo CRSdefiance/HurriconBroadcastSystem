@@ -5,7 +5,8 @@ import { parseSchedule } from '../src/schedule';
 import { fitRect } from '../src/viewport';
 import { advanceBroadcastRail, availableRailModules, defaultBroadcastRail, normalizeBroadcastRail } from '../src/rail';
 import { defaultTransitionOverlay, defaultTransitionSettings, normalizeTransitionOverlay, normalizeTransitionSettings, transitionHalfMs } from '../src/transition';
-import { normalizeInterstitial, normalizeMusic } from '../src/interstitial';
+import { automaticMusicAction, normalizeInterstitial, normalizeMusic } from '../src/interstitial';
+import { normalizePanelLayoutPreferences } from '../src/layout-preferences';
 
 describe('match operations',()=>{
   it('swaps all player data and scores',()=>{const match=defaultMatch();match.player1={displayName:'Alpha',social:'@a',score:2};match.player2={displayName:'Beta',social:'@b',score:1};const result=swapPlayers(match);expect(result.player1).toEqual({displayName:'Beta',social:'@b',score:1});expect(result.player2.displayName).toBe('Alpha');});
@@ -61,7 +62,16 @@ describe('browser transitions',()=>{
 });
 describe('interstitial and music state',()=>{
   it('clamps operator-controlled music settings',()=>{
-    expect(normalizeMusic({source:'local',volume:4,fadeMs:-20,localFolder:'hype'})).toMatchObject({source:'local',volume:1,fadeMs:0,localFolder:'hype',playing:false,status:'stopped'});
+    expect(normalizeMusic({source:'local',volume:4,fadeMs:-20,localFolder:'hype'})).toMatchObject({source:'local',volume:1,fadeMs:0,localFolder:'hype',autoWithInterstitial:true,playing:false,status:'stopped'});
+    expect(normalizeMusic({autoWithInterstitial:false})).toMatchObject({autoWithInterstitial:false});
+  });
+  it('automatically fades only when crossing the interstitial boundary',()=>{
+    const stopped = normalizeMusic({playing:false,autoWithInterstitial:true});
+    const playing = normalizeMusic({playing:true,autoWithInterstitial:true});
+    expect(automaticMusicAction('tournament','interstitial',stopped)).toBe('play');
+    expect(automaticMusicAction('interstitial','gameplay',playing)).toBe('stop');
+    expect(automaticMusicAction('gameplay','tournament',playing)).toBeUndefined();
+    expect(automaticMusicAction('tournament','interstitial',{...stopped,autoWithInterstitial:false})).toBeUndefined();
   });
   it('normalizes slide rotation and limits the slide count',()=>{
     const slides=Array.from({length:30},(_,index)=>({id:`slide-${index}`,enabled:true,title:`Slide ${index}`}));
@@ -70,4 +80,10 @@ describe('interstitial and music state',()=>{
     expect(state.activeIndex).toBe(0);
     expect(state.slides).toHaveLength(24);
   });
+});
+describe('dashboard layout preferences',()=>{
+  it('keeps known cards once and appends newly introduced cards',()=>{
+    expect(normalizePanelLayoutPreferences({version:1,panel:'live',order:['scores','scores','unknown'],collapsed:['timer','unknown']},'live',['show','scores','timer'])).toEqual({version:1,panel:'live',order:['scores','show','timer'],collapsed:['timer']});
+  });
+  it('rejects a layout file for the other panel',()=>expect(normalizePanelLayoutPreferences({version:1,panel:'setup',order:[],collapsed:[]},'live',[])).toBeNull());
 });

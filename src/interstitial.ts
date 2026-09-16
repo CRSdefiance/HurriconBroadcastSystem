@@ -1,4 +1,4 @@
-import type { InterstitialState, MusicState, RainwaveStation } from './types';
+import type { InterstitialState, MusicState, RainwaveStation, ShowMode } from './types';
 
 export const rainwaveStations: RainwaveStation[] = [
   { id: 1, key: 'game', name: 'Game', description: 'Original video game soundtracks' },
@@ -9,7 +9,7 @@ export const rainwaveStations: RainwaveStation[] = [
   { id: 6, key: 'chill', name: 'Chill', description: 'Relaxing video game music' }
 ];
 
-export const defaultMusic = (): MusicState => ({ source: 'rainwave', rainwaveStation: 'all', localFolder: 'chill', volume: 0.72, fadeMs: 1200, playing: false, status: 'stopped', updatedAt: Date.now() });
+export const defaultMusic = (): MusicState => ({ source: 'rainwave', rainwaveStation: 'all', localFolder: 'chill', volume: 0.72, fadeMs: 1200, autoWithInterstitial: true, playing: false, status: 'stopped', updatedAt: Date.now() });
 export const defaultInterstitial = (): InterstitialState => ({
   automatic: true,
   rotationSeconds: 12,
@@ -31,9 +31,17 @@ export const normalizeMusic = (value?: Partial<MusicState>): MusicState => {
     localFolder: String(value?.localFolder || fallback.localFolder),
     volume: Math.min(1, Math.max(0, Number(value?.volume ?? fallback.volume))),
     fadeMs: Math.min(10000, Math.max(0, Number(value?.fadeMs ?? fallback.fadeMs))),
+    autoWithInterstitial: value?.autoWithInterstitial !== false,
     playing: Boolean(value?.playing),
     updatedAt: Number(value?.updatedAt) || Date.now()
   };
+};
+
+export const automaticMusicAction = (previousMode: ShowMode, nextMode: ShowMode, music: MusicState): 'play' | 'stop' | undefined => {
+  if (!music.autoWithInterstitial || previousMode === nextMode) return undefined;
+  if (nextMode === 'interstitial' && !music.playing) return 'play';
+  if (previousMode === 'interstitial' && music.playing) return 'stop';
+  return undefined;
 };
 
 export const normalizeInterstitial = (value?: Partial<InterstitialState>): InterstitialState => {
