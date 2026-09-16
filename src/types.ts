@@ -23,6 +23,7 @@ export type MusicStatus = 'stopped' | 'loading' | 'playing' | 'error';
 export interface RainwaveStation { id: number; key: string; name: string; description?: string }
 export interface MusicState { source: MusicSource; rainwaveStation: string; localFolder: string; volume: number; fadeMs: number; autoWithInterstitial: boolean; playing: boolean; status: MusicStatus; streamUrl?: string; trackTitle?: string; artist?: string; album?: string; artworkUrl?: string; trackKey?: string; error?: string; updatedAt: number }
 export interface MusicLibraryState { folders: string[]; stations: RainwaveStation[]; error?: string }
-export interface InterstitialSlide { id: string; enabled: boolean; kicker?: string; title: string; body?: string; imageUrl?: string }
+export type InterstitialImageFit = 'contain' | 'cover';
+export interface InterstitialSlide { id: string; enabled: boolean; kicker?: string; title: string; body?: string; imageUrl?: string; imageFit?: InterstitialImageFit }
 export interface InterstitialState { automatic: boolean; rotationSeconds: number; activeIndex: number; slides: InterstitialSlide[]; updatedAt: number }
 export interface Brand { id: string; displayName: string; shortName: string; website?: string; socialHandle?: string; assets: Record<string, string>; colors: Record<string, string>; typography: { headingFamily: string; bodyFamily: string; numericFamily: string; headingWeight: number }; shape: { cornerRadius: number; borderWidth: number; panelOpacity: number }; animation: { durationMs: number; reducedMotion: boolean } }

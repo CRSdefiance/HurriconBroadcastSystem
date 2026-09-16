@@ -76,11 +76,13 @@ describe('interstitial and music state',()=>{
     expect(automaticMusicAction('tournament','interstitial',{...stopped,autoWithInterstitial:false})).toBeUndefined();
   });
   it('normalizes slide rotation and limits the slide count',()=>{
-    const slides=Array.from({length:30},(_,index)=>({id:`slide-${index}`,enabled:true,title:`Slide ${index}`}));
+    const slides=Array.from({length:30},(_,index)=>({id:`slide-${index}`,enabled:true,title:`Slide ${index}`,imageFit:index===0?'cover' as const:'invalid' as never}));
     const state=normalizeInterstitial({rotationSeconds:1,activeIndex:-4,slides});
     expect(state.rotationSeconds).toBe(3);
     expect(state.activeIndex).toBe(0);
     expect(state.slides).toHaveLength(24);
+    expect(state.slides[0].imageFit).toBe('cover');
+    expect(state.slides[1].imageFit).toBe('contain');
   });
 });
 describe('dashboard layout preferences',()=>{

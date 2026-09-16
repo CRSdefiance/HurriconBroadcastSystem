@@ -46,6 +46,6 @@ export const automaticMusicAction = (previousMode: ShowMode, nextMode: ShowMode,
 
 export const normalizeInterstitial = (value?: Partial<InterstitialState>): InterstitialState => {
   const fallback = defaultInterstitial();
-  const slides = Array.isArray(value?.slides) ? value.slides.slice(0, 24).map((slide, index) => ({ id: String(slide.id || `slide-${index + 1}`), enabled: slide.enabled !== false, kicker: String(slide.kicker || ''), title: String(slide.title || ''), body: String(slide.body || ''), imageUrl: String(slide.imageUrl || '') || undefined })) : fallback.slides;
+  const slides = Array.isArray(value?.slides) ? value.slides.slice(0, 24).map((slide, index) => ({ id: String(slide.id || `slide-${index + 1}`), enabled: slide.enabled !== false, kicker: String(slide.kicker || ''), title: String(slide.title || ''), body: String(slide.body || ''), imageUrl: String(slide.imageUrl || '') || undefined, imageFit: slide.imageFit === 'cover' ? 'cover' as const : 'contain' as const })) : fallback.slides;
   return { automatic: value?.automatic !== false, rotationSeconds: Math.min(300, Math.max(3, Number(value?.rotationSeconds) || fallback.rotationSeconds)), activeIndex: Math.max(0, Number(value?.activeIndex) || 0), slides, updatedAt: Number(value?.updatedAt) || Date.now() };
 };

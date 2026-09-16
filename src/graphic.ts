@@ -88,7 +88,7 @@ observe<InterstitialState>('interstitial', defaultInterstitial(), (raw) => {
   if (layout !== 'interstitial') return;
   const state = normalizeInterstitial(raw); const slide = state.slides[state.activeIndex] ?? state.slides.find((item) => item.enabled);
   text('[data-slide-kicker]', slide?.kicker || 'Hurricon event information'); text('[data-slide-title]', slide?.title || 'Programming resumes shortly'); text('[data-slide-body]', slide?.body || 'Stay tuned.');
-  const image = $<HTMLElement>('[data-slide-image]'); const url = safeGraphicUrl(slide?.imageUrl); if (image) { image.style.backgroundImage = url ? `url("${url}")` : ''; image.classList.toggle('has-image', Boolean(url)); }
+  const image = $<HTMLElement>('[data-slide-image]'); const url = safeGraphicUrl(slide?.imageUrl); if (image) { image.style.backgroundImage = url ? `url("${url}")` : ''; image.classList.toggle('has-image', Boolean(url)); image.classList.toggle('image-cover', slide?.imageFit === 'cover'); }
   const feature = $('[data-interstitial-feature]'); feature?.classList.remove('changing'); if (feature) { void feature.offsetWidth; feature.classList.add('changing'); }
 });
 observe<MusicState>('music', defaultMusic(), (raw) => {
