@@ -40,6 +40,7 @@ const lowerRep=observe<LowerThirdState>('lowerThird',mockLowerThird,(lower)=>{al
 const showRep=observe<ShowState>('show',mockShow,(show)=>{all<HTMLInputElement>('[data-show]').forEach((el)=>{if(document.activeElement!==el)el.value=String(show[el.dataset.show as keyof ShowState]??'')});all<HTMLButtonElement>('[data-mode]').forEach((button)=>button.classList.toggle('active',button.dataset.mode===show.mode));setText('[data-live-show="current"]',show.currentSegment||'Live show');setText('[data-live-show="next"]',show.nextSegment||'More programming soon');setText('[data-live-show="time"]',show.nextSegmentTime);});
 let railState = mockBroadcastRail;
 let sponsorDraft: SponsorItem[] = [];
+let sponsorDirty = false;
 const renderSponsorEditors = (sponsors: SponsorItem[]) => {
   sponsorDraft = sponsors.map((sponsor) => ({ ...sponsor }));
   const box = $('[data-sponsor-editors]');
@@ -54,7 +55,7 @@ const renderSponsorEditors = (sponsors: SponsorItem[]) => {
     if (logo) logo.value = sponsor?.logoUrl ?? '';
     if (enabled) enabled.checked = sponsor?.enabled !== false;
   });
-  all<HTMLButtonElement>('[data-remove-sponsor]').forEach((button) => button.addEventListener('click', () => { sponsorDraft.splice(Number(button.dataset.removeSponsor), 1); button.blur(); renderSponsorEditors(sponsorDraft); }));
+  all<HTMLButtonElement>('[data-remove-sponsor]').forEach((button) => button.addEventListener('click', () => { sponsorDirty = true; sponsorDraft.splice(Number(button.dataset.removeSponsor), 1); button.blur(); renderSponsorEditors(sponsorDraft); }));
 };
 const railRep=observe<BroadcastRailState>('broadcastRail',mockBroadcastRail,(rail)=>{
   railState=normalizeBroadcastRail(rail);
@@ -66,7 +67,7 @@ const railRep=observe<BroadcastRailState>('broadcastRail',mockBroadcastRail,(rai
   const current=$('[data-rail-current]');if(current)current.textContent=`${railState.activeModule}${railState.held?' · held':''}`;
   all<HTMLButtonElement>('[data-rail-module]').forEach((button)=>button.classList.toggle('active',button.dataset.railModule===railState.activeModule));
   const hold=$<HTMLButtonElement>('[data-rail-action="toggleHold"]');if(hold)hold.textContent=railState.held?'Resume rotation':'Hold rotation';
-  renderSponsorEditors(railState.sponsors);
+  if (!sponsorDirty) renderSponsorEditors(railState.sponsors);
 });
 let speedrunState = mockSpeedrun;
 const renderDashboardTimer=()=>{const elapsed=timerElapsed(speedrunState.timer);const hours=Math.floor(elapsed/3_600_000);const minutes=Math.floor(elapsed/60_000)%60;const seconds=Math.floor(elapsed/1000)%60;const tenths=Math.floor(elapsed/100)%10;const out=$<HTMLOutputElement>('[data-speedrun-timer]');if(out)out.value=`${hours?`${String(hours).padStart(2,'0')}:`:''}${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${tenths}`;};
@@ -92,12 +93,13 @@ all<HTMLButtonElement>('[data-timer-action]').forEach((button)=>button.addEventL
 $('[data-action="apply-speedrun"]')?.addEventListener('click',()=>{const current=speedrunRep.get();const checked=(name:string)=>$<HTMLInputElement>(`[data-speedrun-toggle="${name}"]`)?.checked??false;const feedIdentities:FeedIdentity[]=Array.from({length:4},(_,index)=>({name:value(`[data-feed-identity="${index+1}:name"]`),pronouns:value(`[data-feed-identity="${index+1}:pronouns"]`),social:value(`[data-feed-identity="${index+1}:social"]`),socialPlatform:(value(`[data-feed-social-platform="${index+1}"]`)||'twitch') as SocialPlatform}));speedrunRep.set({...current,cameraVisible:checked('cameraVisible'),timerVisible:checked('timerVisible'),guidesVisible:checked('guidesVisible'),feedIdentitiesVisible:checked('feedIdentitiesVisible'),feedSocialsVisible:checked('feedSocialsVisible'),feedIdentities,game:value('[data-speedrun="game"]'),platform:value('[data-speedrun="platform"]'),runner:value('[data-speedrun="runner"]'),pronouns:value('[data-speedrun="pronouns"]'),category:value('[data-speedrun="category"]'),estimate:value('[data-speedrun="estimate"]')});toast('Speedrun layout applied');});
 all<HTMLButtonElement>('[data-lower-action]').forEach((button)=>button.addEventListener('click',()=>{const current=lowerRep.get();const field=(selector:string,fallback:string|undefined)=>$(selector)?value(selector):fallback;lowerRep.set({...current,visible:button.dataset.lowerAction==='show',title:field('[data-lower="title"]',current.title)??'',subtitle:field('[data-lower="subtitle"]',current.subtitle),tertiary:field('[data-lower="tertiary"]',current.tertiary),style:($( '[data-lower="style"]')?value('[data-lower="style"]'):current.style) as LowerThirdState['style']});}));
 $('[data-action="apply-show"]')?.addEventListener('click',()=>{showRep.set({...showRep.get(),currentSegment:value('[data-show="currentSegment"]'),nextSegment:value('[data-show="nextSegment"]'),nextSegmentTime:value('[data-show="nextSegmentTime"]')});toast('Programming updated');});
-$('[data-action="add-sponsor"]')?.addEventListener('click',()=>{if(sponsorDraft.length>=12){toast('Sponsor limit is 12');return;}sponsorDraft.push({id:`sponsor-${Date.now()}`,name:'',enabled:true});renderSponsorEditors(sponsorDraft);});
+$('[data-action="add-sponsor"]')?.addEventListener('click',()=>{if(sponsorDraft.length>=12){toast('Sponsor limit is 12');return;}sponsorDirty=true;sponsorDraft.push({id:`sponsor-${Date.now()}`,name:'',enabled:true});renderSponsorEditors(sponsorDraft);});
 $('[data-action="apply-rail"]')?.addEventListener('click',()=>{
   const sponsors=all<HTMLElement>('[data-sponsor-editor]').map((panel,index)=>({id:sponsorDraft[index]?.id||`sponsor-${index+1}`,name:(panel.querySelector<HTMLInputElement>('[data-sponsor-field="name"]')?.value??'').trim(),logoUrl:(panel.querySelector<HTMLInputElement>('[data-sponsor-field="logoUrl"]')?.value??'').trim()||undefined,enabled:panel.querySelector<HTMLInputElement>('[data-sponsor-field="enabled"]')?.checked??true})).filter((sponsor)=>sponsor.name);
   const donation={total:Number(value('[data-donation="total"]'))||0,goal:Number(value('[data-donation="goal"]'))||0,currency:value('[data-donation="currency"]')||'USD',latestDonor:value('[data-donation="latestDonor"]')||undefined,latestAmount:Number(value('[data-donation="latestAmount"]'))||undefined,latestMessage:value('[data-donation="latestMessage"]')||undefined,updatedAt:Date.now()};
   const enabledModules=Object.fromEntries((['donation','sponsor','announcement','programming'] as RailModule[]).map((module)=>[module,$<HTMLInputElement>(`[data-rail-module-enabled="${module}"]`)?.checked??false])) as Record<RailModule,boolean>;
   const next=normalizeBroadcastRail({...railState,automatic:$<HTMLInputElement>('[data-rail="automatic"]')?.checked??true,rotationSeconds:Number(value('[data-rail="rotationSeconds"]'))||12,enabledModules,donation,announcement:value('[data-rail-announcement]'),sponsors,updatedAt:Date.now()});
+  sponsorDirty=false;
   if(window.nodecg)void window.nodecg.sendMessage('rail:update',next);else railRep.set(next);toast('Broadcast rail content applied');
 });
 all<HTMLButtonElement>('[data-rail-action]').forEach((button)=>button.addEventListener('click',()=>{const action=button.dataset.railAction!;if(window.nodecg)void window.nodecg.sendMessage('rail:control',action);else if(action==='next'||action==='previous')railRep.set(advanceBroadcastRail(railState,action==='next'?1:-1));else railRep.set({...railState,visible:action==='show'?true:action==='hide'?false:railState.visible,held:action==='toggleHold'?!railState.held:railState.held,updatedAt:Date.now()});}));
@@ -165,6 +167,7 @@ const previewLinks = $('.preview-links');
 if (previewLinks) { const interstitialLink = document.createElement('a'); interstitialLink.href = '../graphics/interstitial.html?background=1'; interstitialLink.target = '_blank'; interstitialLink.textContent = 'Interstitial'; previewLinks.append(interstitialLink); }
 
 let interstitialDraft: InterstitialSlide[] = [];
+let interstitialDirty = false;
 const renderInterstitialEditors = (slides: InterstitialSlide[]) => {
   interstitialDraft = slides.map((slide) => ({ ...slide })); const box = $('[data-interstitial-slides]');
   if (!box || box.contains(document.activeElement)) return;
@@ -182,16 +185,16 @@ observe<MusicLibraryState>('musicLibrary', { folders: [], stations: rainwaveStat
   const folder = $<HTMLSelectElement>('[data-music-setting="localFolder"]'); if (folder) { folder.innerHTML = library.folders.map((name) => `<option value="${name}">${name}</option>`).join('') || '<option value="">No playlist folders found</option>'; folder.value = musicState.localFolder; }
 });
 let interstitialState = defaultInterstitial();
-const interstitialRep = observe<InterstitialState>('interstitial', defaultInterstitial(), (raw) => { interstitialState = normalizeInterstitial(raw); const automatic = $<HTMLInputElement>('[data-interstitial-setting="automatic"]'); if (automatic) automatic.checked = interstitialState.automatic; const seconds = $<HTMLInputElement>('[data-interstitial-setting="rotationSeconds"]'); if (seconds && document.activeElement !== seconds) seconds.value = String(interstitialState.rotationSeconds); renderInterstitialEditors(interstitialState.slides); });
+const interstitialRep = observe<InterstitialState>('interstitial', defaultInterstitial(), (raw) => { interstitialState = normalizeInterstitial(raw); const automatic = $<HTMLInputElement>('[data-interstitial-setting="automatic"]'); if (automatic && !interstitialDirty) automatic.checked = interstitialState.automatic; const seconds = $<HTMLInputElement>('[data-interstitial-setting="rotationSeconds"]'); if (seconds && document.activeElement !== seconds && !interstitialDirty) seconds.value = String(interstitialState.rotationSeconds); if (!interstitialDirty) renderInterstitialEditors(interstitialState.slides); });
 const updateMusicVisibility = () => { const source = value('[data-music-setting="source"]') as MusicSource; const rainwave = $('[data-rainwave-setting]'); const local = $('[data-local-setting]'); if (rainwave) rainwave.hidden = source === 'local'; if (local) local.hidden = source !== 'local'; };
 $('[data-music-setting="source"]')?.addEventListener('change', updateMusicVisibility); updateMusicVisibility();
 all<HTMLButtonElement>('[data-music-action]').forEach((button) => button.addEventListener('click', () => { const action = button.dataset.musicAction; if (window.nodecg) void window.nodecg.sendMessage('music:control', action); else musicRep.set({ ...musicState, playing: action === 'play' ? true : action === 'stop' ? false : musicState.playing, updatedAt: Date.now() }); }));
 $('[data-action="refresh-music"]')?.addEventListener('click', () => { if (window.nodecg) void window.nodecg.sendMessage('music:control', 'refresh'); toast('Music library refreshed'); });
 $('[data-action="apply-music"]')?.addEventListener('click', () => { const next: Partial<MusicState> = { source: value('[data-music-setting="source"]') as MusicSource, rainwaveStation: value('[data-music-setting="rainwaveStation"]'), localFolder: value('[data-music-setting="localFolder"]'), volume: (Number(value('[data-music-setting="volume"]')) || 0) / 100, fadeMs: Number(value('[data-music-setting="fadeMs"]')) || 0, autoWithInterstitial: $<HTMLInputElement>('[data-music-setting="autoWithInterstitial"]')?.checked ?? true }; if (window.nodecg) void window.nodecg.sendMessage('music:configure', next); else musicRep.set(normalizeMusic({ ...musicState, ...next })); toast('Music source applied'); });
 all<HTMLButtonElement>('[data-interstitial-action]').forEach((button) => button.addEventListener('click', () => { if (window.nodecg) void window.nodecg.sendMessage('interstitial:control', button.dataset.interstitialAction); }));
-$('[data-action="add-interstitial-slide"]')?.addEventListener('click', () => { if (interstitialDraft.length >= 24) return toast('Slide limit is 24'); interstitialDraft.push({ id: `slide-${Date.now()}`, enabled: true, title: 'New event message' }); renderInterstitialEditors(interstitialDraft); });
-document.addEventListener('click', (event) => { const remove = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-remove-interstitial-slide]'); if (!remove) return; interstitialDraft.splice(Number(remove.dataset.removeInterstitialSlide), 1); renderInterstitialEditors(interstitialDraft); });
-$('[data-action="apply-interstitial"]')?.addEventListener('click', () => { const slides = all<HTMLElement>('[data-interstitial-slide]').map((panel, index) => { const field = (name:string) => (panel.querySelector<HTMLInputElement|HTMLTextAreaElement>(`[data-slide-field="${name}"]`)?.value ?? '').trim(); return { id: interstitialDraft[index]?.id || `slide-${index + 1}`, enabled: panel.querySelector<HTMLInputElement>('[data-slide-field="enabled"]')?.checked ?? true, kicker: field('kicker'), title: field('title'), body: field('body'), imageUrl: field('imageUrl') || undefined }; }).filter((slide) => slide.title); const next = normalizeInterstitial({ ...interstitialState, automatic: $<HTMLInputElement>('[data-interstitial-setting="automatic"]')?.checked ?? true, rotationSeconds: Number(value('[data-interstitial-setting="rotationSeconds"]')) || 12, slides, updatedAt: Date.now() }); if (window.nodecg) void window.nodecg.sendMessage('interstitial:update', next); else interstitialRep.set(next); toast('Interstitial applied'); });
+$('[data-action="add-interstitial-slide"]')?.addEventListener('click', () => { if (interstitialDraft.length >= 24) return toast('Slide limit is 24'); interstitialDirty = true; interstitialDraft.push({ id: `slide-${Date.now()}`, enabled: true, title: 'New event message' }); renderInterstitialEditors(interstitialDraft); });
+document.addEventListener('click', (event) => { const remove = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-remove-interstitial-slide]'); if (!remove) return; interstitialDirty = true; interstitialDraft.splice(Number(remove.dataset.removeInterstitialSlide), 1); renderInterstitialEditors(interstitialDraft); });
+$('[data-action="apply-interstitial"]')?.addEventListener('click', () => { const slides = all<HTMLElement>('[data-interstitial-slide]').map((panel, index) => { const field = (name:string) => (panel.querySelector<HTMLInputElement|HTMLTextAreaElement>(`[data-slide-field="${name}"]`)?.value ?? '').trim(); return { id: interstitialDraft[index]?.id || `slide-${index + 1}`, enabled: panel.querySelector<HTMLInputElement>('[data-slide-field="enabled"]')?.checked ?? true, kicker: field('kicker'), title: field('title'), body: field('body'), imageUrl: field('imageUrl') || undefined }; }).filter((slide) => slide.title); const next = normalizeInterstitial({ ...interstitialState, automatic: $<HTMLInputElement>('[data-interstitial-setting="automatic"]')?.checked ?? true, rotationSeconds: Number(value('[data-interstitial-setting="rotationSeconds"]')) || 12, slides, updatedAt: Date.now() }); interstitialDirty = false; if (window.nodecg) void window.nodecg.sendMessage('interstitial:update', next); else interstitialRep.set(next); toast('Interstitial applied'); });
 
 // NodeCG owns upload/deletion in the Assets workspace. This focused picker
 // consumes its live asset Replicant and writes the selected safe URL into the
@@ -202,11 +205,20 @@ const installAssetPicker = () => {
   let target: HTMLInputElement | null = null;
   const modal = document.createElement('div');
   modal.className = 'asset-picker'; modal.hidden = true;
-  modal.innerHTML = '<section role="dialog" aria-modal="true" aria-labelledby="asset-picker-title"><div class="asset-picker-head"><div><span class="eyebrow">NodeCG assets</span><h2 id="asset-picker-title">Choose broadcast image</h2></div><button type="button" data-asset-close aria-label="Close asset picker">Close</button></div><p class="hint">Upload and delete files from the Assets option in the upper-right corner. This list updates automatically.</p><div class="asset-picker-grid" data-asset-grid></div><div class="actions"><button type="button" data-asset-clear>Clear image</button><button type="button" data-asset-close>Cancel</button></div></section>';
+  modal.innerHTML = '<section role="region" aria-labelledby="asset-picker-title"><div class="asset-picker-head"><div><span class="eyebrow">NodeCG assets</span><h3 id="asset-picker-title">Choose broadcast image</h3></div><button type="button" data-asset-close aria-label="Close asset picker">Close</button></div><p class="hint">Upload and delete files from Assets → Broadcast Images. This list updates automatically.</p><div class="asset-picker-grid" data-asset-grid></div><div class="actions"><button type="button" data-asset-clear>Clear image</button><button type="button" data-asset-close>Cancel</button></div></section>';
   document.body.append(modal);
   const grid = modal.querySelector<HTMLElement>('[data-asset-grid]')!;
-  const close = () => { modal.hidden = true; target = null; };
-  const choose = (url: string) => { if (!target) return; target.value = url; target.dispatchEvent(new Event('input', { bubbles: true })); target.dispatchEvent(new Event('change', { bubbles: true })); close(); toast(url ? 'Image selected' : 'Image cleared'); };
+  const close = () => { modal.hidden = true; document.body.append(modal); target = null; };
+  const choose = (url: string) => {
+    if (!target) return;
+    target.value = url;
+    const sponsorPanel = target.closest<HTMLElement>('[data-sponsor-editor]');
+    const slidePanel = target.closest<HTMLElement>('[data-interstitial-slide]');
+    if (sponsorPanel) { sponsorDirty = true; const draft = sponsorDraft[Number(sponsorPanel.dataset.sponsorEditor)]; if (draft) draft.logoUrl = url || undefined; }
+    if (slidePanel) { interstitialDirty = true; const draft = interstitialDraft[Number(slidePanel.dataset.interstitialSlide)]; if (draft) draft.imageUrl = url || undefined; }
+    target.dispatchEvent(new Event('input', { bubbles: true })); target.dispatchEvent(new Event('change', { bubbles: true }));
+    close(); toast(url ? 'Image selected — click Apply to publish' : 'Image cleared — click Apply to publish');
+  };
   const render = () => {
     grid.replaceChildren();
     if (!assets.length) { const empty = document.createElement('p'); empty.className = 'asset-picker-empty'; empty.textContent = 'No broadcast images uploaded yet. Open Assets, choose Broadcast Images, upload a file, and return here.'; grid.append(empty); return; }
@@ -225,7 +237,9 @@ const installAssetPicker = () => {
   document.addEventListener('click', (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-pick-asset]'); if (!button) return;
     target = button.closest('.asset-field')?.querySelector<HTMLInputElement>('input') ?? null; if (!target) return;
-    render(); modal.hidden = false; modal.querySelector<HTMLButtonElement>('[data-asset-close]')?.focus();
+    if (target.matches('[data-sponsor-field="logoUrl"]')) sponsorDirty = true;
+    if (target.matches('[data-slide-field="imageUrl"]')) interstitialDirty = true;
+    render(); button.closest('.asset-field')?.after(modal); modal.hidden = false; modal.querySelector<HTMLButtonElement>('.asset-choice,[data-asset-close]')?.focus();
   });
   modal.querySelectorAll<HTMLButtonElement>('[data-asset-close]').forEach((button) => button.addEventListener('click', close));
   modal.querySelector('[data-asset-clear]')?.addEventListener('click', () => choose(''));
@@ -233,6 +247,11 @@ const installAssetPicker = () => {
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.hidden) close(); });
 };
 installAssetPicker();
+document.addEventListener('input', (event) => {
+  const input = event.target as HTMLElement;
+  if (input.closest('[data-sponsor-editors]')) sponsorDirty = true;
+  if (input.closest('[data-interstitial-slides]') || input.matches('[data-interstitial-setting]')) interstitialDirty = true;
+});
 
 // Operator layout preferences are browser-local by default and can be moved
 // between workstations with a small JSON file. Only presentation order and
