@@ -1,4 +1,5 @@
 import './styles/graphics.css';
+import './styles/match-status.css';
 import './styles/identity-transitions.css';
 import './styles/interstitial.css';
 import { applyBrand, assetUrl } from './brand';
@@ -81,7 +82,7 @@ const renderPlayerIdentity = (side: 'p1'|'p2', player: PlayerState) => {
   renderSocialIcon(`[data-${side}-social-icon]`, player.socialPlatform);
   $(`.tournament .${side}`)?.classList.toggle('has-social', Boolean(player.social));
 };
-observe<MatchState>('match', mockMatch, (m) => { text('[data-game]',m.game);text('[data-round]',m.round);text('[data-status]',m.status);renderPlayerIdentity('p1',m.player1);renderPlayerIdentity('p2',m.player2);text('[data-p1-score]',m.player1.score);text('[data-p2-score]',m.player2.score);text('[data-best]',m.bestOf ? `BEST OF ${m.bestOf}` : ''); });
+observe<MatchState>('match', mockMatch, (m) => { text('[data-game]',m.game);text('[data-round]',m.round);const status=$<HTMLElement>('[data-status]');if(status){status.textContent=m.status==='complete'?'Match complete':m.status;status.dataset.matchStatus=m.status;}renderPlayerIdentity('p1',m.player1);renderPlayerIdentity('p2',m.player2);text('[data-p1-score]',m.player1.score);text('[data-p2-score]',m.player2.score);text('[data-best]',m.bestOf ? `BEST OF ${m.bestOf}` : ''); });
 observe<Commentator[]>('commentators', mockCommentators, (list) => text('[data-commentators]',list.length ? `Commentary: ${list.map((c)=>c.name).join(' · ')}` : ''));
 observe<ShowState>('show', mockShow, (s) => { text('[data-current]',s.currentSegment || (layout === 'break' ? 'Intermission' : 'Live show'));text('[data-next]',s.nextSegment || 'More programming soon');text('[data-next-time]',s.nextSegmentTime || ''); });
 observe<InterstitialState>('interstitial', defaultInterstitial(), (raw) => {

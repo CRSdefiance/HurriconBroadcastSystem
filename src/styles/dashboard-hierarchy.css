@@ -136,6 +136,27 @@ body {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--control-accent) 30%, transparent), 0 20px 52px #0005;
 }
 
+.status-actions button {
+  min-width: 82px;
+  background: #263147;
+  opacity: .68;
+}
+
+.status-actions button.primary:not(.active) {
+  background: #263147;
+}
+
+.status-actions button.active {
+  opacity: 1;
+  border-color: #fff9;
+  box-shadow: 0 0 0 2px #ffffff24, 0 0 22px color-mix(in srgb, var(--status-color) 45%, transparent);
+  background: var(--status-color);
+}
+
+.status-actions [data-status='ready'] { --status-color: #b7791f; }
+.status-actions [data-status='live'] { --status-color: #138a55; }
+.status-actions [data-status='complete'] { --status-color: #7656c9; }
+
 @media (max-width: 850px) {
   .dashboard { gap: 16px; }
   .card { border-top-width: 4px; }

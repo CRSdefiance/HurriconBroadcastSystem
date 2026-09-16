@@ -1,0 +1,13 @@
+.topbar .status {
+  min-width: 150px;
+  padding: 10px 16px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  text-align: center;
+  background: #0004;
+}
+
+.topbar .status[data-match-status='setup'] { color: var(--brand-muted); }
+.topbar .status[data-match-status='ready'] { color: var(--brand-warning); }
+.topbar .status[data-match-status='live'] { color: var(--brand-success); }
+.topbar .status[data-match-status='complete'] { color: var(--brand-secondary); }
