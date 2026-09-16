@@ -21,6 +21,9 @@ writeFileSync(resolve(out, 'package.json'), JSON.stringify({
   main: 'extension/index.js',
   nodecg: {
     compatibleRange: '^2.8.0',
+    assetCategories: [
+      { name: 'images', title: 'Broadcast Images', allowedTypes: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'] }
+    ],
     dashboardPanels: [
       { name: 'control', title: 'HBS Live Control', width: 10, file: 'index.html', headerColor: '#172554' },
       { name: 'setup', title: 'HBS Setup / Preview', width: 10, file: 'setup.html', headerColor: '#312e81' }

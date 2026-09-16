@@ -9,11 +9,12 @@ import { normalizeBroadcastRail } from './rail';
 import { normalizeTransitionOverlay } from './transition';
 import { normalizeSocialHandle, renderSocialIcon } from './social';
 import { defaultInterstitial, defaultMusic, normalizeInterstitial, normalizeMusic, rainwaveStations } from './interstitial';
+import { broadcastImageAssetUrl } from './asset-library';
 import type { Brand, BroadcastRailState, Commentator, FeedCount, HbsTransitionMode, InterstitialState, LowerThirdState, MatchState, MusicState, PlayerState, ShowState, SpeedrunState, TransitionOverlayState } from './types';
 
 const $ = <T extends HTMLElement>(selector: string): T | null => document.querySelector(selector);
 const text = (selector: string, value: unknown) => { const el = $(selector); if (el) el.textContent = value == null ? '' : String(value); };
-const safeGraphicUrl = (url?: string) => url && (url.startsWith('https://') || url.startsWith('/bundles/')) ? url : '';
+const safeGraphicUrl = broadcastImageAssetUrl;
 const money = (amount: number, currency: string) => { try { return new Intl.NumberFormat('en-US',{style:'currency',currency:currency||'USD',maximumFractionDigits:amount%1?2:0}).format(amount); } catch { return `${currency||'$'} ${amount.toLocaleString()}`; } };
 const layout = document.body.dataset.layout;
 const previewParams = new URLSearchParams(location.search);
