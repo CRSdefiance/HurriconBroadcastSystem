@@ -1,0 +1,142 @@
+/* Visual wayfinding for operator panels. The data-layout-id values are assigned
+   by the layout editor from each card's eyebrow and heading, so reordered cards
+   retain the same category color and hierarchy. */
+:root {
+  --control-output: #28c7fa;
+  --control-tournament: #ff5f7d;
+  --control-speedrun: #35d6a1;
+  --control-rail: #ffb84d;
+  --control-identity: #b58cff;
+  --control-programming: #61a5ff;
+  --control-transition: #9d7cff;
+  --control-music: #f05ac5;
+  --control-brand: #27d3c2;
+  --control-preflight: #a9b7cc;
+}
+
+html,
+body {
+  background:
+    radial-gradient(circle at 12% 8%, #15325b4d, transparent 27rem),
+    radial-gradient(circle at 90% 22%, #33215742, transparent 31rem),
+    #090d18;
+}
+
+.dashboard {
+  gap: 24px;
+}
+
+.card {
+  --control-accent: var(--control-output);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--control-accent) 46%, #ffffff20);
+  border-top: 5px solid var(--control-accent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--control-accent) 9%, #111827) 0, #111827 36%),
+    #111827;
+  box-shadow: 0 20px 52px #0005, inset 0 1px #ffffff0d;
+}
+
+.card[data-layout-id*='tournament'] { --control-accent: var(--control-tournament); }
+.card[data-layout-id*='match-live'] { --control-accent: var(--control-tournament); }
+.card[data-layout-id*='speedrun'] { --control-accent: var(--control-speedrun); }
+.card[data-layout-id*='run-clock'] { --control-accent: var(--control-speedrun); }
+.card[data-layout-id*='rail'] { --control-accent: var(--control-rail); }
+.card[data-layout-id*='lower-third'] { --control-accent: var(--control-identity); }
+.card[data-layout-id*='programming'] { --control-accent: var(--control-programming); }
+.card[data-layout-id*='transition'] { --control-accent: var(--control-transition); }
+.card[data-layout-id*='music'] { --control-accent: var(--control-music); }
+.card[data-layout-id*='interstitial'] { --control-accent: var(--control-music); }
+.card[data-layout-id*='brand'] { --control-accent: var(--control-brand); }
+.card[data-layout-id*='preflight'] { --control-accent: var(--control-preflight); }
+.card[data-layout-id*='configuration-library'] { --control-accent: var(--control-transition); }
+
+.card > .eyebrow:first-of-type,
+.card > .section-head .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 4px 9px;
+  border: 1px solid color-mix(in srgb, var(--control-accent) 55%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--control-accent) 13%, transparent);
+  color: color-mix(in srgb, var(--control-accent) 82%, white);
+  font-size: 11px;
+}
+
+.card > .section-head {
+  margin: -2px 0 20px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid color-mix(in srgb, var(--control-accent) 35%, #ffffff12);
+}
+
+.card > .section-head h2 {
+  margin-bottom: 0;
+}
+
+.card > .eyebrow:first-of-type + h2 {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--control-accent) 35%, #ffffff12);
+}
+
+.card h2 {
+  letter-spacing: -.015em;
+}
+
+.card label {
+  color: #cbd5e4;
+}
+
+.card input,
+.card select,
+.card textarea {
+  border-color: #ffffff2d;
+  background: #070c16;
+}
+
+.card input:focus,
+.card select:focus,
+.card textarea:focus {
+  border-color: var(--control-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--control-accent) 26%, transparent);
+}
+
+.player-form,
+.feed-identity-form,
+.rail-editor,
+.sponsor-editor,
+.interstitial-slide-editor,
+.music-summary,
+.live-summary,
+.program-summary > div {
+  border: 1px solid #ffffff22;
+  background: linear-gradient(145deg, #0b1222, #080d18);
+  box-shadow: inset 0 1px #ffffff0a, 0 8px 24px #0002;
+}
+
+.feed-identities-head,
+.interstitial-setup-card hr {
+  border-color: color-mix(in srgb, var(--control-accent) 30%, #ffffff18);
+}
+
+.layout-toolbar {
+  border: 1px solid #4d6f9c66;
+  background: linear-gradient(120deg, #172238, #101827);
+  box-shadow: 0 14px 38px #0004;
+}
+
+.layout-toolbar strong {
+  color: #e9f2ff;
+  font-size: 15px;
+}
+
+.layout-editing .card {
+  border-color: var(--control-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--control-accent) 30%, transparent), 0 20px 52px #0005;
+}
+
+@media (max-width: 850px) {
+  .dashboard { gap: 16px; }
+  .card { border-top-width: 4px; }
+}
