@@ -6,7 +6,7 @@
     "automatic": { "type": "boolean" },
     "rotationSeconds": { "type": "number", "minimum": 3, "maximum": 300 },
     "activeIndex": { "type": "integer", "minimum": 0 },
-    "slides": { "type": "array", "maxItems": 24, "items": { "type": "object", "required": ["id", "enabled", "title"], "properties": { "id": { "type": "string", "maxLength": 120 }, "enabled": { "type": "boolean" }, "kicker": { "type": "string", "maxLength": 100 }, "title": { "type": "string", "maxLength": 180 }, "body": { "type": "string", "maxLength": 500 }, "imageUrl": { "type": "string", "maxLength": 1000 } }, "additionalProperties": false } },
+    "slides": { "type": "array", "maxItems": 24, "items": { "type": "object", "required": ["id", "enabled", "title"], "properties": { "id": { "type": "string", "maxLength": 120 }, "enabled": { "type": "boolean" }, "kicker": { "type": "string", "maxLength": 100 }, "title": { "type": "string", "maxLength": 180 }, "body": { "type": "string", "maxLength": 500 }, "imageUrl": { "type": "string", "maxLength": 1000 }, "imageFit": { "enum": ["contain", "cover"] } }, "additionalProperties": false } },
     "updatedAt": { "type": "number" }
   },
   "additionalProperties": false
