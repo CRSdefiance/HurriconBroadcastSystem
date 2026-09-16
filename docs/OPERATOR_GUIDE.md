@@ -22,6 +22,8 @@ Each panel has a **Panel layout** bar. Choose **Reorganize**, then drag cards by
 
 Use **Assets** in the NodeCG header to upload PNG, JPG, WEBP, GIF, or SVG files under **Broadcast Images**. Sponsor-logo and interstitial-slide image fields include **Select asset** buttons with thumbnail previews. The list updates after an upload without rebuilding HBS; select an image, then use the card's normal Apply button to put the change on air. Asset files live on the NodeCG server machine, so include the runtime `assets` folder in event backups.
 
+Tournament player names retain the normal on-air type size. Names wider than their player card automatically use a slow, paused horizontal reveal so the complete tag is shown; names that already fit do not move. Reduced-motion systems show the full name as wrapped text instead.
+
 Use **Open full Program Preview** in Setup / Preview to proof the entire 1920×1080 composition in an ordinary browser. It layers the active tournament, speedrun, interview, break, or technical layout with its scene/feed backgrounds, lower third, global rail, sponsor rotation, and transition overlay. The default URL follows the mode selected in Live Control; the fixed Tournament and Speedrun links are useful while preparing a scene that is not currently live. Capture inputs are represented by branded placeholders because only OBS can composite the real cameras and gameplay feeds.
 
 Always operate Setup through `http://127.0.0.1:9090/dashboard/`. Opening the dashboard panel's HTML file directly is only a disconnected development fallback, so its fields use sample values and cannot change live NodeCG state.

@@ -10,6 +10,7 @@ import { normalizeTransitionOverlay } from './transition';
 import { normalizeSocialHandle, renderSocialIcon } from './social';
 import { defaultInterstitial, defaultMusic, normalizeInterstitial, normalizeMusic, rainwaveStations } from './interstitial';
 import { broadcastImageAssetUrl } from './asset-library';
+import { nameMarqueeMetrics } from './name-display';
 import type { Brand, BroadcastRailState, Commentator, FeedCount, HbsTransitionMode, InterstitialState, LowerThirdState, MatchState, MusicState, PlayerState, ShowState, SpeedrunState, TransitionOverlayState } from './types';
 
 const $ = <T extends HTMLElement>(selector: string): T | null => document.querySelector(selector);
@@ -64,7 +65,16 @@ observe<Brand>('brand', mockBrand, (value) => {
   }
 });
 const renderPlayerIdentity = (side: 'p1'|'p2', player: PlayerState) => {
-  text(`[data-${side}-name]`, player.displayName);
+  const name = $<HTMLElement>(`[data-${side}-name]`); const nameWrap = $<HTMLElement>(`[data-${side}-name-wrap]`);
+  if (name) { name.textContent = player.displayName; name.title = player.displayName; }
+  const measureName = () => {
+    if (!name || !nameWrap) return;
+    nameWrap.classList.remove('overflowing'); name.style.removeProperty('--name-travel'); name.style.removeProperty('--name-duration');
+    const metrics = nameMarqueeMetrics(name.scrollWidth, nameWrap.clientWidth);
+    if (!metrics) return;
+    name.style.setProperty('--name-travel', `${metrics.travelPx}px`); name.style.setProperty('--name-duration', `${metrics.durationMs}ms`); nameWrap.classList.add('overflowing');
+  };
+  requestAnimationFrame(measureName); void document.fonts?.ready.then(measureName);
   text(`[data-${side}-pronouns]`, player.pronouns);
   text(`[data-${side}-location]`, player.location);
   text(`[data-${side}-social]`, normalizeSocialHandle(player.social));

@@ -8,6 +8,7 @@ import { defaultTransitionOverlay, defaultTransitionSettings, normalizeTransitio
 import { automaticMusicAction, normalizeInterstitial, normalizeMusic } from '../src/interstitial';
 import { normalizePanelLayoutPreferences } from '../src/layout-preferences';
 import { broadcastImageAssetUrl } from '../src/asset-library';
+import { nameMarqueeMetrics } from '../src/name-display';
 
 describe('match operations',()=>{
   it('swaps all player data and scores',()=>{const match=defaultMatch();match.player1={displayName:'Alpha',social:'@a',score:2};match.player2={displayName:'Beta',social:'@b',score:1};const result=swapPlayers(match);expect(result.player1).toEqual({displayName:'Beta',social:'@b',score:1});expect(result.player2.displayName).toBe('Alpha');});
@@ -97,5 +98,12 @@ describe('broadcast asset URLs',()=>{
   it('rejects other asset namespaces and unsafe schemes',()=>{
     expect(broadcastImageAssetUrl('/assets/other/images/file.png')).toBe('');
     expect(broadcastImageAssetUrl('javascript:alert(1)')).toBe('');
+  });
+});
+describe('long player-name presentation',()=>{
+  it('leaves names that fit completely still',()=>expect(nameMarqueeMetrics(240,254)).toBeNull());
+  it('calculates a readable bounded reveal for overflowing names',()=>{
+    expect(nameMarqueeMetrics(410,254)).toEqual({travelPx:174,durationMs:11176});
+    expect(nameMarqueeMetrics(2000,254)?.durationMs).toBe(18000);
   });
 });
