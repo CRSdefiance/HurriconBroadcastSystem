@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "name": "HBS preset",
+  "savedAt": "2026-09-01T18:19:47.164Z",
+  "match": {
+    "game": "Super Smash Bros. Melee",
+    "round": "Exhibition",
+    "bestOf": 5,
+    "player1": {
+      "displayName": "SomeGuy",
+      "score": 0,
+      "pronouns": "He/Him",
+      "location": "Charleston, WV",
+      "social": "twitch.tv/SomeGuy",
+      "seed": 2
+    },
+    "player2": {
+      "displayName": "PlayerTwo",
+      "score": 0,
+      "pronouns": "He/Him",
+      "location": "Hurricane, WV",
+      "social": "twitch.tv/GameGrove",
+      "seed": 2
+    },
+    "status": "live"
+  },
+  "speedrun": {
+    "feedCount": 2,
+    "cameraVisible": false,
+    "timerVisible": true,
+    "guidesVisible": true,
+    "feedIdentitiesVisible": true,
+    "feedSocialsVisible": false,
+    "feedIdentities": [
+      {
+        "name": "SomeRetroGuy",
+        "pronouns": "He/Him",
+        "social": "@SomeRetroGuyTTV"
+      },
+      {
+        "name": "Runner2",
+        "pronouns": "She/Her",
+        "social": "@Runner2"
+      },
+      {
+        "name": "",
+        "pronouns": "",
+        "social": ""
+      },
+      {
+        "name": "",
+        "pronouns": "",
+        "social": ""
+      }
+    ],
+    "game": "Goldeneye 64",
+    "platform": "N64",
+    "category": "Multiplayer",
+    "runner": "SomeRetroGuy",
+    "estimate": "1:00:00",
+    "timer": {
+      "running": false,
+      "elapsedMs": 904348
+    },
+    "pronouns": "He/Him"
+  },
+  "broadcastRail": {
+    "visible": true,
+    "automatic": true,
+    "held": false,
+    "rotationSeconds": 12,
+    "activeModule": "sponsor",
+    "enabledModules": {
+      "donation": true,
+      "sponsor": true,
+      "announcement": true,
+      "programming": true
+    },
+    "donation": {
+      "total": 0,
+      "goal": 0,
+      "currency": "USD",
+      "updatedAt": 1788185046434
+    },
+    "announcement": "",
+    "sponsors": [
+      {
+        "id": "sponsor-1788184373125",
+        "name": "Game  Grove - https://game-grove.shop/",
+        "logoUrl": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-6/415508053_356006867180834_5969674909315306192_n.jpg?stp=dst-jpg_tt6&cstp=mx280x280&ctp=s280x280&_nc_cat=110&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=hZvEulUQFKQQ7kNvwFD8rQt&_nc_oc=Ado2VogagyWeJiArreNyFTa7sZsI5BZakmyG7pn0Gj6LswyYoYsawuc73fhFcwaPM88&_nc_zt=23&_nc_ht=scontent-iad3-1.xx&_nc_gid=Jm5h9hTxK7B8jBgUofpMvA&_nc_ss=7b2a8&oh=00_AQI9XHLuEjm08FckYti8aC2Cx02Hl875GKh0HkTnuPlIbQ&oe=6A9B5E7A",
+        "enabled": true
+      },
+      {
+        "id": "sponsor-2",
+        "name": "Element 304 Printing",
+        "logoUrl": "https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-6/465103542_517573761265297_2880510371744141772_n.png?stp=dst-png&cstp=mx2000x1500&ctp=s2000x1500&_nc_cat=101&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=AqJYNGtugCcQ7kNvwGMnRmu&_nc_oc=Ado4xYnZ_ezRtTy5ToVsZrPxSbS51mDNb6c-HY1Mm03w1j4jCJGpEX8hI3ty0jRdaM0&_nc_zt=23&_nc_ht=scontent-iad3-1.xx&_nc_gid=mRVb4PDcqYodYM7TWHHZDg&_nc_ss=7b2a8&oh=00_AQK3u8yaCtgayrsKc0qrKMht6s93OTmY2iZbF5CvzTN8dA&oe=6A9B4227",
+        "enabled": true
+      }
+    ],
+    "sponsorIndex": 1,
+    "updatedAt": 1788286780064
+  },
+  "lowerThird": {
+    "visible": true,
+    "title": "Title",
+    "style": "sponsor",
+    "subtitle": "Subtitle",
+    "tertiary": "Tertiary"
+  },
+  "show": {
+    "mode": "tournament",
+    "nextSegment": "SSB Ultimate",
+    "currentSegment": "Super Smash Bros. Melee",
+    "nextSegmentTime": "06:00 PM"
+  },
+  "transitionSettings": {
+    "mode": "obs",
+    "obsName": "Fade",
+    "durationMs": 700
+  },
+  "activeBrand": "hurricon"
+}
